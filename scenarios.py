@@ -138,7 +138,7 @@ def _fetch_candidate_settings(
         "messages": [{"role": "user", "content": _prompt(used_sensors, seed_registry, MAX_PROPOSED)}],
         "temperature": 0.2,
         "top_p": 0.95,
-        "max_tokens": 256,
+        "max_tokens": 4096,
         "seed": int(seed_registry[0]) if seed_registry else 0,
         "stream": False,
     }
@@ -165,8 +165,12 @@ def _fetch_candidate_settings(
     if not choices:
         return []
     message = choices[0].get("message") or {}
+    # Nemotron 3.5 Lightning is a reasoning model: the final answer may be in
+    # ``content`` or in ``reasoning_content`` (or both). Read whichever holds text.
     content = message.get("content") or ""
-    return _json_from_text(content)
+    reasoning = message.get("reasoning_content") or ""
+    text = content if content.strip() else reasoning
+    return _json_from_text(text)
 
 
 def _validate_proposals(

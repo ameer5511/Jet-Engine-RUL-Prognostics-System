@@ -63,3 +63,38 @@ def test_final_cycle_frame_picks_last_cycle_per_engine():
 def test_per_engine_metrics_missing_column_raises():
     with pytest.raises(KeyError):
         ev.per_engine_metrics(pd.DataFrame({"unit": [1]}))
+
+
+def test_nasa_score_zero_when_perfect():
+    y_true = [10, 20, 30]
+    y_pred = [10, 20, 30]
+    assert ev.nasa_score(y_true, y_pred) == pytest.approx(0.0)
+
+
+def test_nasa_score_sign_and_magnitude():
+    # e = truth - pred = -10 (pred too high / optimistic): exp(10/13)-1
+    opt = ev.nasa_score([0], [10])
+    assert opt == pytest.approx(np.exp(10 / 13.0) - 1.0)
+    # e = +10 (pred too low / conservative): exp(10/10)-1
+    cons = ev.nasa_score([10], [0])
+    assert cons == pytest.approx(np.exp(10 / 10.0) - 1.0)
+    # conservative penalised slightly more per unit than optimistic
+    assert cons > opt
+
+
+def test_nasa_score_is_sum_of_per_row():
+    y_true = [0, 10]
+    y_pred = [10, 0]
+    total = ev.nasa_score(y_true, y_pred)
+    per = sum(ev.nasa_score([a], [b]) for a, b in zip(y_true, y_pred))
+    assert total == pytest.approx(per)
+
+
+def test_nasa_score_per_engine():
+    df = pd.DataFrame({"unit": [1, 1, 2], "RUL": [0, 10, 0], "pred": [10, 0, 5]})
+    out = ev.nasa_score_per_engine(df).set_index("engine")
+    assert set(out.index) == {1, 2}
+    # engine 1: e = [-10, 10] -> exp(10/13)-1 + exp(10/10)-1
+    exp_sum = (np.exp(10 / 13.0) - 1.0) + (np.exp(10 / 10.0) - 1.0)
+    assert out.loc[1, "nasa_score_sum"] == pytest.approx(exp_sum)
+    assert out.loc[1, "n"] == 2

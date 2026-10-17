@@ -104,6 +104,52 @@ def interval_coverage(y_true, low, high) -> float:
     return float(np.mean((y >= lo) & (y <= hi)))
 
 
+def nasa_score(y_true, y_pred) -> float:
+    """Pooled NASA C-MAPSS asymmetric score (Saxena & Goebel, PHM 2008).
+
+    Per-row error: ``e_i = truth_i - pred_i``.
+
+        e_i < 0  (prediction too HIGH / optimistic / dangerous):
+            s_i = exp(-e_i / 13) - 1   -> rate 1/13 per unit over-predict
+        e_i >= 0 (prediction too LOW / conservative / safe):
+            s_i = exp(e_i / 10) - 1    -> rate 1/10 per unit under-predict
+
+    Returns sum_i s_i. Lower is better.
+    """
+    y = _as_float(y_true)
+    p = _as_float(y_pred)
+    e = y - p
+    s = np.where(e < 0, np.exp(-e / 13.0) - 1.0, np.exp(e / 10.0) - 1.0)
+    return float(np.sum(s))
+
+
+def nasa_score_per_engine(
+    frame: pd.DataFrame,
+    engine_col: str = "unit",
+    true_col: str = "RUL",
+    pred_col: str = "pred",
+) -> pd.DataFrame:
+    """NASA score summed per engine, plus mean and row count.
+
+    Returns columns: engine, n, nasa_score_sum, nasa_score_mean.
+    """
+    for col in (engine_col, true_col, pred_col):
+        if col not in frame.columns:
+            raise KeyError(f"missing column: {col}")
+    e = _as_float(frame[true_col]) - _as_float(frame[pred_col])
+    s = np.where(e < 0, np.exp(-e / 13.0) - 1.0, np.exp(e / 10.0) - 1.0)
+    work = pd.DataFrame({"engine": frame[engine_col].to_numpy(), "s": s})
+    grouped = work.groupby("engine")
+    out = pd.DataFrame(
+        {
+            "n": grouped.size(),
+            "nasa_score_sum": grouped["s"].sum(),
+            "nasa_score_mean": grouped["s"].mean(),
+        }
+    )
+    return out.reset_index()
+
+
 def final_cycle_frame(frame: pd.DataFrame, cycle_col: str = "cycle", engine_col: str = "unit") -> pd.DataFrame:
     """Return each engine's last recorded cycle."""
     last = frame.groupby(engine_col)[cycle_col].transform("max")

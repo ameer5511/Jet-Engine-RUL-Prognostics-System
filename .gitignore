@@ -22,6 +22,12 @@ data/processed/*
 # Generated artifacts (scores, scenarios cache, dashboards inputs)
 results/*
 !results/.gitkeep
+# Committed stress-test / baseline artifacts (read by dashboard on fresh hosts)
+!results/phase2_metrics.json
+!results/phase2_resolved_config.json
+!results/phase2_val_predictions.csv
+!results/phase4_stress.json
+!results/phase4_stress.csv
 *.joblib
 *.pkl
 

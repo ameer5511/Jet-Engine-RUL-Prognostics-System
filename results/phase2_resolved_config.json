@@ -1,0 +1,97 @@
+{
+  "project": {
+    "name": "aeroguard-robustness-lab",
+    "seed_registry": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "data": {
+    "dataset": "FD001",
+    "raw_dir": "data/raw",
+    "processed_dir": "data/processed"
+  },
+  "labels": {
+    "cap": 125,
+    "train_cap": null
+  },
+  "split": {
+    "by": "engine",
+    "val_fraction": 0.2,
+    "seed": 0
+  },
+  "features": {
+    "window": 10,
+    "use_current": true,
+    "use_mean": true,
+    "use_trend": true,
+    "drop_constant_sensors": true
+  },
+  "models": {
+    "constant": {},
+    "random_forest": {},
+    "gradient_boosting": {},
+    "safe_side": {
+      "quantile": 0.3
+    },
+    "range": {
+      "low_quantile": 0.1,
+      "high_quantile": 0.9
+    }
+  },
+  "evaluation": {
+    "primary_agg": "engine",
+    "margin": 10,
+    "margin_sweep": [
+      5,
+      10,
+      20
+    ]
+  },
+  "faults": {
+    "noise": {
+      "unit": "std_train",
+      "magnitudes": [
+        0.25,
+        0.5,
+        1.0,
+        2.0
+      ]
+    },
+    "drift": {
+      "profile": "linear_over_engine",
+      "magnitudes": [
+        0.5,
+        1.0,
+        2.0,
+        4.0
+      ]
+    },
+    "missing": {
+      "fill": "forward_fill",
+      "magnitudes": [
+        0.05,
+        0.1,
+        0.2,
+        0.4
+      ]
+    },
+    "apply_to": "held_out_only"
+  },
+  "nemotron": {
+    "enabled": true,
+    "combine": "union",
+    "cache_file": "results/nemotron_scenarios.json",
+    "temperature": 0.2
+  },
+  "outputs": {
+    "dir": "results",
+    "schema_version": 1
+  },
+  "dashboard": {
+    "host": "nebius"
+  }
+}
