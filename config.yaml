@@ -1,0 +1,73 @@
+# AeroGuard v2 — configuration
+# Single source of tunable knobs. Resolved config must be logged with every run.
+# Values marked "Open Q-*" must be verified before the relevant phase.
+
+project:
+  name: aeroguard-robustness-lab
+  seed_registry: [0, 1, 2, 3, 4]   # 5 seeds used across split/models/faults
+
+data:
+  dataset: FD001
+  raw_dir: data/raw
+  processed_dir: data/processed
+  # Exact FD001 filenames/columns: Open Q-B1 (verify against NASA readme)
+
+labels:
+  cap: 125                # training labels capped; metrics use uncapped true RUL (A1)
+
+split:
+  by: engine              # engine-level split only
+  val_fraction: 0.20      # ~20 of 100 train engines held out for validation
+  seed: 0
+  # Guardrail: official test engines untouched until final run (A5, still open)
+
+features:
+  window: 10              # last-N flights for mean/trend
+  use_current: true
+  use_mean: true
+  use_trend: true
+  drop_constant_sensors: true
+  # partial windows: available history only; trend=0 when <2 flights (A4)
+
+models:
+  constant: {}
+  random_forest: {}
+  gradient_boosting: {}
+  safe_side:
+    quantile: 0.30        # alpha for the conservative model
+  range:
+    low_quantile: 0.10
+    high_quantile: 0.90
+
+evaluation:
+  primary_agg: engine     # per-engine primary; per-flight secondary (A6)
+  margin: 10              # flights; too-optimistic threshold
+  margin_sweep: [5, 10, 20]
+  # cost_of_safety = mean(RUL_main - RUL_safe); + fraction conservative + max (A2)
+
+faults:
+  # Magnitudes in dataset-relative units (A3). std_train = std over TRAINING engines only.
+  noise:
+    unit: std_train
+    magnitudes: [0.25, 0.50, 1.00, 2.00]
+  drift:
+    profile: linear_over_engine
+    magnitudes: [0.50, 1.00, 2.00, 4.00]   # total shift across engine, in std units
+  missing:
+    fill: forward_fill
+    magnitudes: [0.05, 0.10, 0.20, 0.40]   # fraction of an engine's flights blanked
+  apply_to: held_out_only  # never training data
+
+nemotron:
+  enabled: true           # --offline overrides to false
+  combine: union          # validated suggestions union with grid (dependency)
+  cache_file: results/nemotron_scenarios.json
+  temperature: 0.2
+  # model/endpoint from environment (.env); exact values Open Q-B5
+
+outputs:
+  dir: results
+  schema_version: 1
+
+dashboard:
+  host: nebius            # DevPod vs Serverless Endpoint: Open Q-B2

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local datasets (kept out of git; see README)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Generated artifacts (scores, scenarios cache, dashboards inputs)
+results/*
+!results/.gitkeep
+*.joblib
+*.pkl
+
+# Logs and macOS
+*.log
+.DS_Store

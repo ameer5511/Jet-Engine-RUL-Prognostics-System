@@ -1,0 +1,19 @@
+# AeroGuard v2 — Python dependencies
+#
+# The project targets Python 3.11+.
+#
+# NOTE: These are MINIMUM bounds, not verified pins. The system Python on this Mac
+# (3.9) has none of these installed. Once the project environment exists, lock
+# exact versions with:  pip freeze > requirements.lock.txt
+#
+# scikit-learn quantile-loss support is relied on for the safe-side model and must
+# be verified against the installed version's docs (Open Question B3).
+
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+streamlit>=1.30
+plotly>=5.18
+requests>=2.31
+PyYAML>=6.0
+python-dotenv>=1.0
