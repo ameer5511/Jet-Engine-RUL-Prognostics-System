@@ -46,7 +46,7 @@ and it can be pointed at Nebius Token Factory instead via `NVIDIA_BASE_URL`.
 | 1 | Data & features | Done |
 | 2 | Models & baselines | Done |
 | 3 | Robustness Lab | Done |
-| 4 | Stress test & evaluation | Not started |
+| 4 | Stress test & evaluation | Done |
 | 5 | Dashboard & demo | Not started |
 | 6 | Polish, tests, submission | Not started |
 

@@ -135,6 +135,8 @@ def _apply_missing(df, sensor, magnitude, seed):
 
 def _apply_one(df, sensor_std, sensor, kind, magnitude, seed):
     std = sensor_std[sensor]
+    # Ensure float dtype so fault values can be assigned (raw data may be int64).
+    df[sensor] = df[sensor].astype(float)
     if kind == "noise":
         return _apply_noise(df, sensor, std, magnitude, seed)
     if kind == "drift":

@@ -12,6 +12,20 @@ The client is provider-agnostic: any OpenAI-compatible endpoint works
     NVIDIA_BASE_URL     defaults to https://integrate.api.nvidia.com/v1
     NEMOTRON_MODEL      defaults to nvidia/nemotron-3.5-lightning-30b-a3b
     NEMOTRON_MAX_CALLS  cap live calls per run to protect credits (default 5)
+
+Scenario structure returned by :func:`get_scenarios`:
+
+    [
+        {
+            "name": "noise_k0.5",      # stable scenario id
+            "kind": "noise",
+            "magnitude": 0.5,
+            "sensor": None,             # None => applied to all sensors
+            "source": "grid",           # "grid" or "nemotron"
+            "settings": [FaultSetting, ...],  # one per sensor when sensor is None
+        },
+        ...
+    ]
 """
 
 from __future__ import annotations
@@ -128,8 +142,6 @@ def _fetch_candidate_settings(
         "seed": int(seed_registry[0]) if seed_registry else 0,
         "stream": False,
     }
-    # chat_template_kwargs is not part of the strict OpenAPI schema
-    # (additionalProperties: false), so we do not send it.
     try:
         resp = requests.post(
             f"{base_url}/chat/completions",
@@ -205,38 +217,70 @@ def _save_cache(payload: dict[str, Any]) -> None:
         json.dump(payload, handle, indent=2)
 
 
+def _scenario_key(kind: str, magnitude: float, sensor: str | None) -> tuple:
+    return (kind, magnitude, sensor)
+
+
+def _make_scenario(
+    name: str,
+    kind: str,
+    magnitude: float,
+    settings: list[FaultSetting],
+    source: str,
+) -> dict[str, Any]:
+    return {
+        "name": name,
+        "kind": kind,
+        "magnitude": magnitude,
+        "sensor": None,  # grid scenarios apply to all sensors
+        "source": source,
+        "settings": settings,
+    }
+
+
+def _nemotron_scenario(
+    st: FaultSetting,
+) -> dict[str, Any]:
+    return {
+        "name": f"nemotron_{st.kind}_k{st.magnitude}_{st.sensor}",
+        "kind": st.kind,
+        "magnitude": st.magnitude,
+        "sensor": st.sensor,
+        "source": "nemotron",
+        "settings": [st],
+    }
+
+
 def get_scenarios(
     cfg: dict,
     used_sensors: list[str],
     sensor_std: dict[str, float],
     offline: bool = False,
-) -> tuple[list[FaultSetting], list[dict[str, Any]]]:
-    """Return (settings, provenance) for the full scenario set.
+) -> list[dict[str, Any]]:
+    """Return a list of scenario dicts.
 
-    Grid settings (all sensors) are always included. Nemotron proposals
-    (single sensor) are added when enabled, not offline, and a key exists.
-    Invalid suggestions are silently rejected. Results are cached so reruns
-    cost no credits.
+    Each scenario bundles the FaultSettings that must be applied together.
+    Grid scenarios apply one (kind, magnitude) to *all* sensors. Nemotron
+    scenarios are single-sensor proposals.
+
+    Results are cached so reruns cost no credits. ``--offline`` skips Nemotron
+    entirely (grid-only).
     """
     seed_registry = [int(s) for s in cfg.get("project", {}).get("seed_registry", [0])]
     sensors = list(used_sensors)
 
     # ---- fixed grid (always) ----
-    settings: list[FaultSetting] = []
-    provenance: list[dict[str, Any]] = []
+    scenarios: list[dict[str, Any]] = []
+    seen: set[tuple[str, float, str | None]] = set()
+
     for config in fixed_grid(sensors):
-        for st in config.expand(sensors):
-            settings.append(st)
-            provenance.append(
-                {
-                    "sensor": st.sensor,
-                    "kind": st.kind,
-                    "magnitude": st.magnitude,
-                    "seed": st.seed,
-                    "source": "grid",
-                    "scope": "all_sensors",
-                }
-            )
+        settings = config.expand(sensors, seed_base=0)
+        name = f"{config.kind}_k{config.magnitude:g}"
+        key = _scenario_key(config.kind, config.magnitude, None)
+        if key in seen:
+            continue
+        seen.add(key)
+        scenarios.append(_make_scenario(name, config.kind, config.magnitude, settings, "grid"))
 
     # ---- nemotron (optional) ----
     nemotron_cfg = cfg.get("nemotron", {})
@@ -288,39 +332,21 @@ def get_scenarios(
                 )
 
             for st in nemotron_settings:
-                settings.append(st)
-                provenance.append(
-                    {
-                        "sensor": st.sensor,
-                        "kind": st.kind,
-                        "magnitude": st.magnitude,
-                        "seed": st.seed,
-                        "source": "nemotron",
-                        "scope": "single_sensor",
-                    }
-                )
+                key = _scenario_key(st.kind, st.magnitude, st.sensor)
+                if key in seen:
+                    continue
+                seen.add(key)
+                scenarios.append(_nemotron_scenario(st))
 
-    # ---- dedupe exact duplicates, preserve grid-first order ----
-    seen: set[tuple[str, str, float, int]] = set()
-    deduped_settings: list[FaultSetting] = []
-    deduped_provenance: list[dict[str, Any]] = []
-    for st, prov in zip(settings, provenance):
-        key = (st.sensor, st.kind, st.magnitude, st.seed)
-        if key in seen:
-            continue
-        seen.add(key)
-        deduped_settings.append(st)
-        deduped_provenance.append(prov)
-
-    return deduped_settings, deduped_provenance
+    return scenarios
 
 
-def apply_plan(
+def apply_scenario(
     raw: pd.DataFrame,
     sensor_std: dict[str, float],
-    settings: list[FaultSetting],
+    scenario: dict[str, Any],
 ) -> pd.DataFrame:
-    """Apply a full scenario plan to raw held-out data."""
+    """Apply one scenario's fault settings to raw held-out data. Returns a copy."""
     from faults import apply_settings
 
-    return apply_settings(raw, sensor_std, settings)
+    return apply_settings(raw, sensor_std, scenario["settings"])

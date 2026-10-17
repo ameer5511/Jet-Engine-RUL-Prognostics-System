@@ -43,6 +43,10 @@ def _monkeypatch_fetch(monkeypatch, proposals):
     monkeypatch.setattr(scenarios, "_save_cache", lambda payload: None)
 
 
+def _scenario_names(scenarios_list):
+    return {s["name"] for s in scenarios_list}
+
+
 def test_offline_returns_grid_only(monkeypatch, sensors, cfg, std):
     _clear_cache()
     called = {"n": 0}
@@ -50,14 +54,30 @@ def test_offline_returns_grid_only(monkeypatch, sensors, cfg, std):
     def fake(sensors, seed_registry, max_calls, call_budget):
         called["n"] += 1
         return []
-
     monkeypatch.setattr(scenarios, "_fetch_candidate_settings", fake)
 
-    settings, prov = scenarios.get_scenarios(cfg, sensors, std, offline=True)
+    scens = scenarios.get_scenarios(cfg, sensors, std, offline=True)
     assert called["n"] == 0
-    assert all(p["source"] == "grid" for p in prov)
-    assert len(settings) == len(fixed_grid(sensors)) * len(sensors)
-    assert len(settings) == len(prov)
+    assert all(s["source"] == "grid" for s in scens)
+    # 12 configs (3 kinds x 4 magnitudes), each applied to all sensors
+    assert len(scens) == 12
+    names = _scenario_names(scens)
+    assert "noise_k0.25" in names
+    assert "noise_k2" in names
+    assert "drift_k0.5" in names
+    assert "drift_k4" in names
+    assert "missing_k0.05" in names
+    assert "missing_k0.4" in names
+
+
+def test_grid_scenarios_apply_to_all_sensors(sensors, cfg, std):
+    scens = scenarios.get_scenarios(cfg, sensors, std, offline=True)
+    noise = [s for s in scens if s["name"] == "noise_k0.5"][0]
+    assert noise["kind"] == "noise"
+    assert noise["magnitude"] == 0.5
+    assert noise["sensor"] is None  # all sensors
+    assert len(noise["settings"]) == len(sensors)
+    assert {st.sensor for st in noise["settings"]} == set(sensors)
 
 
 def test_nemotron_valid_proposals_added(monkeypatch, sensors, cfg, std):
@@ -71,14 +91,16 @@ def test_nemotron_valid_proposals_added(monkeypatch, sensors, cfg, std):
         ],
     )
 
-    settings, prov = scenarios.get_scenarios(cfg, sensors, std, offline=False)
-    nemotron = [p for p in prov if p["source"] == "nemotron"]
+    scens = scenarios.get_scenarios(cfg, sensors, std, offline=False)
+    nemotron = [s for s in scens if s["source"] == "nemotron"]
     assert len(nemotron) == 2
-    assert {
-        (p["sensor"], p["kind"], p["magnitude"], p["seed"]) for p in nemotron
-    } == {("s1", "noise", 0.75, 1), ("s2", "drift", 1.5, 2)}
-    assert all(p["scope"] == "single_sensor" for p in nemotron)
-    assert any(p["source"] == "grid" for p in prov)
+    names = {s["name"] for s in nemotron}
+    assert "nemotron_noise_k0.75_s1" in names
+    assert "nemotron_drift_k1.5_s2" in names
+    for s in nemotron:
+        assert s["sensor"] is not None  # single sensor
+        assert len(s["settings"]) == 1
+    assert any(s["source"] == "grid" for s in scens)
     monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
 
 
@@ -95,17 +117,10 @@ def test_nemotron_invalid_proposals_rejected(monkeypatch, sensors, cfg, std):
         ],
     )
 
-    settings, prov = scenarios.get_scenarios(cfg, sensors, std, offline=False)
-    nemotron = [p for p in prov if p["source"] == "nemotron"]
+    scens = scenarios.get_scenarios(cfg, sensors, std, offline=False)
+    nemotron = [s for s in scens if s["source"] == "nemotron"]
     assert len(nemotron) == 1
-    assert nemotron[0] == {
-        "sensor": "s1",
-        "kind": "noise",
-        "magnitude": 0.5,
-        "seed": 1,
-        "source": "nemotron",
-        "scope": "single_sensor",
-    }
+    assert nemotron[0]["name"] == "nemotron_noise_k0.5_s1"
     monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
 
 
@@ -120,8 +135,8 @@ def test_nemotron_duplicate_proposals_deduped(monkeypatch, sensors, cfg, std):
         ],
     )
 
-    settings, prov = scenarios.get_scenarios(cfg, sensors, std, offline=False)
-    nemotron = [p for p in prov if p["source"] == "nemotron"]
+    scens = scenarios.get_scenarios(cfg, sensors, std, offline=False)
+    nemotron = [s for s in scens if s["source"] == "nemotron"]
     assert len(nemotron) == 1
     monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
 
@@ -157,12 +172,12 @@ def test_cache_skips_http(monkeypatch, sensors, cfg, std):
 
         monkeypatch.setattr(scenarios, "_fetch_candidate_settings", fake)
 
-        settings, prov = scenarios.get_scenarios(cfg, sensors, std, offline=False)
+        scens = scenarios.get_scenarios(cfg, sensors, std, offline=False)
         assert called["n"] == 0
-        nemotron = [p for p in prov if p["source"] == "nemotron"]
+        nemotron = [s for s in scens if s["source"] == "nemotron"]
         assert len(nemotron) == 1
         assert nemotron[0]["magnitude"] == 0.9
-        assert nemotron[0]["seed"] == 7
+        assert nemotron[0]["settings"][0].seed == 7
     finally:
         _clear_cache()
         monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
@@ -176,23 +191,29 @@ def test_no_api_key_means_grid_only(monkeypatch, sensors, cfg, std):
     def fake(sensors, seed_registry, max_calls, call_budget):
         called["n"] += 1
         return []
-
     monkeypatch.setattr(scenarios, "_fetch_candidate_settings", fake)
 
-    settings, prov = scenarios.get_scenarios(cfg, sensors, std, offline=False)
+    scens = scenarios.get_scenarios(cfg, sensors, std, offline=False)
     assert called["n"] == 0
-    assert all(p["source"] == "grid" for p in prov)
+    assert all(s["source"] == "grid" for s in scens)
     monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
 
 
-def test_apply_plan_applies_settings(std):
+def test_apply_scenario_applies_settings(std):
     rows = []
     for unit, base in ((1, 10.0), (2, 50.0)):
         for i in range(1, 5):
             rows.append({"unit": unit, "cycle": i, "s1": base + i, "s2": 3.0})
     raw = pd.DataFrame(rows)
-    settings = [FaultSetting("s1", "drift", 1.0, 0)]
-    faulted = scenarios.apply_plan(raw, std, settings)
+    scenario = {
+        "name": "test_drift",
+        "kind": "drift",
+        "magnitude": 1.0,
+        "sensor": None,
+        "source": "grid",
+        "settings": [FaultSetting("s1", "drift", 1.0, 0)],
+    }
+    faulted = scenarios.apply_scenario(raw, std, scenario)
     assert not faulted["s1"].equals(raw["s1"])
     assert faulted["s2"].equals(raw["s2"])
 
@@ -200,6 +221,4 @@ def test_apply_plan_applies_settings(std):
 def test_fixed_grid_and_config_roundtrip(sensors):
     configs = fixed_grid(sensors)
     assert len(configs) == 12
-    total = sum(len(c.expand(sensors)) for c in configs)
-    assert total == 12 * len(sensors)
     assert FaultConfig("noise", 0.25).expand(sensors) == FaultConfig("noise", 0.25).expand(sensors)

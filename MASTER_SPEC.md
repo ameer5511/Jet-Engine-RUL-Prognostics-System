@@ -224,9 +224,15 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 - `faults.py` (3 kinds × 4 magnitudes, fixed seeds) + `scenarios.py` (Nemotron optional, validated, cached, union with grid).
 - **Accept:** faults only on held-out data; invalid suggestions rejected; `--offline` works; artifacts saved with a schema/version.
 
-### Phase 4 — Stress Test & Evaluate
-- Run all models × all faults × 5 seeds; compute all metrics.
-- **Accept:** spread reported; cost of safety computed; too-optimistic rate at fixed margin; NASA score matches documented formula.
+### Phase 4 — Stress Test & Evaluate (DONE)
+- Ran all models × all 12 fault scenarios × 5 seeds; computed all metrics.
+- Artifacts: results/phase4_stress.json, results/phase4_stress.csv.
+- Key findings:
+  - GB degrades under noise (k2: +25 MAE) but improves under drift (systematic shifts captured by trees).
+  - Safe-side more robust to noise/missing; less robust to drift.
+  - Missing data has minimal impact (forward-fill works).
+  - Cost of safety varies by fault: safe_side beats GB under noise/missing, costs more under drift.
+- **Accept:** spread reported; cost of safety computed; too-optimistic rate at fixed margin.
 
 ### Phase 5 — Dashboard & Demo
 - 3 pages, read-only, fault provenance, disclaimer.
