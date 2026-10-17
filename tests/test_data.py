@@ -95,15 +95,29 @@ def test_load_raw_real(have_real_data, raw_dir):
 def test_build_train_val_real_no_overlap(have_real_data, raw_dir):
     if not have_real_data:
         pytest.skip("real FD001 data not present")
-    train_split, val_split, meta = build_train_val("FD001", raw_dir, cap=125, seed=0)
+    # Default: uncapped training targets, matching metrics vs uncapped truth.
+    train_split, val_split, meta = build_train_val("FD001", raw_dir, seed=0)
     assert meta["n_train_engines"] == 80
     assert meta["n_val_engines"] == 20
+    assert meta["train_cap"] is None
     assert set(meta["train_ids"]).isdisjoint(meta["val_ids"])
-    assert {"RUL", "RUL_capped"}.issubset(train_split.columns)
-    # cap applied for training labels, uncapped RUL retained for metrics
-    assert train_split["RUL_capped"].max() <= 125
+    assert "RUL" in train_split.columns
+    # Uncapped RUL retained for metrics; no capped column by default.
+    assert "RUL_capped" not in train_split.columns
     assert train_split["RUL"].max() > 125
     assert set(engine_ids(train_split)).isdisjoint(set(engine_ids(val_split)))
+
+
+def test_build_train_val_real_with_cap(have_real_data, raw_dir):
+    if not have_real_data:
+        pytest.skip("real FD001 data not present")
+    train_split, val_split, meta = build_train_val(
+        "FD001", raw_dir, train_cap=125, seed=0
+    )
+    assert meta["train_cap"] == 125
+    assert "RUL_capped" in train_split.columns
+    assert train_split["RUL_capped"].max() <= 125
+    assert train_split["RUL"].max() > 125  # uncapped column still present
 
 
 def test_add_rul_zero_on_last_cycle_real(have_real_data, raw_dir):

@@ -13,7 +13,8 @@ data:
   # Exact FD001 filenames/columns: Open Q-B1 (verify against NASA readme)
 
 labels:
-  cap: 125                # training labels capped; metrics use uncapped true RUL (A1)
+  cap: 125                # historical C-MAPSS cap (kept for reference)
+  train_cap: null         # training target cap: null = uncapped RUL (matches metrics vs uncapped truth)
 
 split:
   by: engine              # engine-level split only

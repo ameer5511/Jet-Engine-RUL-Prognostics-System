@@ -55,9 +55,9 @@ A RUL (Remaining Useful Life) pipeline on NASA C-MAPSS **FD001** with three part
 
 ### Labels
 - RUL = flights remaining until failure for that engine.
-- **Cap at 125** for training labels (healthy engines look alike in the early region).
-- **DECIDED (A1):** training labels are capped at 125; all reported metrics are computed against the **uncapped** true RUL, so the cap never flatters the score. Evaluation uses the official true-RUL values (uncapped).
-- Cap value is a hyperparameter chosen on validation data only.
+- **Cap at 125** retained as a historical C-MAPSS convention, but training targets use **uncapped RUL**.
+- **DECIDED (A1):** training targets are uncapped RUL; all reported metrics are computed against the **uncapped** true RUL. Training and evaluation targets match, so bias, coverage, and cost-of-safety are not distorted by capping.
+- Cap value is a hyperparameter; retained for reference only, not applied to training.
 
 ### Split
 - Split by **whole engines**, never by row.
@@ -176,7 +176,7 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 ## 9. Assumptions to verify (do NOT treat as fact)
 
 ### A. Design decisions — RESOLVED
-- **A1 (resolved):** cap training labels at 125; metrics vs uncapped true RUL.
+- **A1 (resolved):** train on uncapped RUL; metrics vs uncapped true RUL. Cap retained for reference only.
 - **A2 (resolved):** cost of safety = `mean(RUL_main − RUL_safe)` + fraction conservative + max cost.
 - **A3 (resolved):** fault magnitudes in train-std / fraction units (see table in §5).
 - **A4 (resolved):** partial windows use available history only; trend = 0 when <2 flights.

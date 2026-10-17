@@ -87,12 +87,12 @@ def prepare(cfg: dict, raw_dir: str | Path):
     split_cfg = cfg.get("split", {})
     seed = int(split_cfg.get("seed", 0))
     val_fraction = float(split_cfg.get("val_fraction", 0.2))
-    cap = cfg.get("labels", {}).get("cap", 125)
+    train_cap = cfg.get("labels", {}).get("train_cap", None)
     window = int(cfg.get("features", {}).get("window", 10))
     dataset = cfg.get("data", {}).get("dataset", "FD001")
 
     train_split, val_split, meta = data_mod.build_train_val(
-        dataset, raw_dir, cap=cap, val_fraction=val_fraction, seed=seed
+        dataset, raw_dir, train_cap=train_cap, val_fraction=val_fraction, seed=seed
     )
     fs_train = add_features(train_split, data_mod.SENSOR_COLS, window=window)
     fs_val = add_features(
@@ -122,7 +122,7 @@ def run_phase2(cfg: dict, raw_dir: str | Path = "data/raw") -> Dict:
 
     feature_cols = fs_train.feature_cols
     X_train = fs_train.frame[feature_cols].to_numpy(dtype=float)
-    y_train = fs_train.frame["RUL_capped"].to_numpy(dtype=float)
+    y_train = fs_train.frame["RUL"].to_numpy(dtype=float)
 
     val = fs_val.frame
     X_val = val[feature_cols].to_numpy(dtype=float)

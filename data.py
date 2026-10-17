@@ -131,16 +131,20 @@ def assert_disjoint(train_ids, val_ids) -> None:
 def build_train_val(
     dataset: str = "FD001",
     raw_dir: str | Path = "data/raw",
-    cap: float | None = 125,
+    train_cap: float | None = None,
     val_fraction: float = 0.2,
     seed: int = 0,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict]:
     """Build labelled train/validation splits from the training engines only.
 
+    Training targets are uncapped RUL by default so predictions span the full
+    true range (matching metrics which score vs uncapped RUL). Pass
+    ``train_cap`` to cap training labels for experiments.
+
     The official test engines are never loaded here.
     """
     train_df, _, _ = load_raw(dataset, raw_dir)
-    labelled = add_rul(train_df, cap=cap)
+    labelled = add_rul(train_df, cap=train_cap)
     train_ids, val_ids = split_engines(engine_ids(labelled), val_fraction, seed)
     assert_disjoint(train_ids, val_ids)
 
@@ -149,7 +153,7 @@ def build_train_val(
 
     meta: Dict = {
         "dataset": dataset,
-        "cap": cap,
+        "train_cap": train_cap,
         "val_fraction": val_fraction,
         "seed": seed,
         "n_train_engines": int(train_ids.size),

@@ -28,10 +28,12 @@ both the *robustness* of RUL models to sensor faults and the *cost of safety*
 3. **A dashboard** — Streamlit + Plotly, hosted on Nebius, reading pre-computed
    results only (nothing trains at request time).
 
-NVIDIA **Nemotron Nano** (via Nebius Token Factory) has exactly one job: it
-*proposes* fault settings to test. Our code validates every suggestion against a
-strict schema and computes every number. The pipeline runs fully offline with a
-fixed fault grid if Nemotron is unavailable.
+NVIDIA **Nemotron 3.5 Lightning 30B-A3B** (free hosted endpoint,
+`https://integrate.api.nvidia.com/v1`, keyed by `NVIDIA_API_KEY`) has exactly one
+job: it *proposes* fault settings to test. Our code validates every suggestion
+against a strict schema and computes every number. Nemotron is optional — the
+pipeline runs fully offline with a fixed fault grid if Nemotron is unavailable,
+and it can be pointed at Nebius Token Factory instead via `NVIDIA_BASE_URL`.
 
 > **Disclaimer.** All data is NASA's C-MAPSS simulation, not real engine data.
 > Research/portfolio use only — not for real maintenance or airworthiness decisions.
@@ -42,8 +44,8 @@ fixed fault grid if Nemotron is unavailable.
 | --- | --- | --- |
 | 0 | Setup & spec | Done |
 | 1 | Data & features | Done |
-| 2 | Models & baselines | Not started |
-| 3 | Robustness Lab | Not started |
+| 2 | Models & baselines | Done |
+| 3 | Robustness Lab | Done |
 | 4 | Stress test & evaluation | Not started |
 | 5 | Dashboard & demo | Not started |
 | 6 | Polish, tests, submission | Not started |
@@ -63,7 +65,7 @@ See `MASTER_SPEC.md` for the full design, decisions, and acceptance criteria.
 ├── results/              # generated artifacts (git-ignored)
 ├── tests/                # one small test per module
 └── (data.py, features.py, models.py, faults.py, scenarios.py,
-     stress_test.py, evaluate.py, dashboard.py)
+     train.py, evaluate.py, stress_test.py, dashboard.py)
 ```
 
 ## Environment setup
@@ -114,7 +116,15 @@ cp .env.example .env      # then edit .env
 
 Nemotron is only called by `scenarios.py`. Validated suggestions are cached to
 `results/`, so reruns are deterministic and cost nothing. Use `--offline` to run
-grid-only. Exact model name, endpoint, and request format must be confirmed in the
+grid-only.
+
+### Labels & metrics
+
+Training targets use **uncapped RUL** so predictions span the full true range,
+matching metrics which score against uncapped truth. The historical C-MAPSS cap
+of 125 is retained for reference only (it previously caused systematic
+under-prediction and biased coverage numbers).
+ Exact model name, endpoint, and request format must be confirmed in the
 Token Factory console (Open Question B5 in `MASTER_SPEC.md`).
 
 ## Disclaimer
