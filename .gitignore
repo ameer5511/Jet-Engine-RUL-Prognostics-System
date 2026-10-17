@@ -10,6 +10,9 @@ venv/
 # Jupyter
 .ipynb_checkpoints/
 
+# pytest
+.pytest_cache/
+
 # Local datasets (kept out of git; see README)
 data/raw/*
 !data/raw/.gitkeep

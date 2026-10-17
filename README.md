@@ -40,8 +40,8 @@ fixed fault grid if Nemotron is unavailable.
 
 | Phase | Description | State |
 | --- | --- | --- |
-| 0 | Setup & spec | In progress |
-| 1 | Data & features | Not started |
+| 0 | Setup & spec | Done |
+| 1 | Data & features | Done |
 | 2 | Models & baselines | Not started |
 | 3 | Robustness Lab | Not started |
 | 4 | Stress test & evaluation | Not started |
@@ -85,6 +85,15 @@ pip install -r requirements.txt
 
 Exact dependency versions will be locked with `pip freeze > requirements.lock.txt`
 once the environment exists.
+
+### Running the tests
+
+```bash
+conda run -n ml python -m pytest tests/ -q
+```
+
+Tests that need the real FD001 files skip automatically when the data is absent,
+so the suite always runs.
 
 ## Data
 
