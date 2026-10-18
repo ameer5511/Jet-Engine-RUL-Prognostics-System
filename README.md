@@ -1,4 +1,4 @@
-# AeroGuard: Robustness Lab
+# Jet Engine RUL Prognostics System
 
 **License: MIT** (see [LICENSE](LICENSE))
 
