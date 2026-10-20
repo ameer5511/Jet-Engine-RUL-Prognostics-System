@@ -7,6 +7,7 @@ Read-only: reads results/phase2_val_predictions.csv and results/phase2_metrics.j
 from __future__ import annotations
 
 import sys
+import textwrap
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -83,6 +84,15 @@ for m in models:
     s = np.where(err < 0, np.exp(-err / 13.0) - 1.0, np.exp(err / 10.0) - 1.0)
     nasa_scores[m] = float(np.sum(s))
 
+def _compact_num(v: float) -> str:
+    """Format a number compactly: 696800 -> 696.8M, 1234 -> 1.2K."""
+    if v >= 1e6:
+        return f"{v/1e6:.1f}M"
+    if v >= 1e3:
+        return f"{v/1e3:.1f}K"
+    return f"{v:,.0f}"
+
+
 # Cost of safety: safe_side MAE - GB MAE on val
 ss_mae = float(np.mean(np.abs(preds["safe_side"] - preds["RUL"])))
 gb_mae = float(np.mean(np.abs(preds["gradient_boosting"] - preds["RUL"])))
@@ -94,61 +104,91 @@ best_too_opt = float(best_row["too_opt_engine_margin10"]) if pd.notna(best_row["
 kpi_items = [
     {"label": "Best model", "value": best_model, "subtext": "by engine-mean MAE"},
     {"label": "MAE", "value": f"{best_mae:.1f}", "subtext": f"{best_model}"},
-    {"label": "NASA score", "value": f"{nasa_scores.get('gradient_boosting', 0):,.0f}", "subtext": "gradient boosting"},
+    {"label": "NASA score", "value": _compact_num(nasa_scores.get("gradient_boosting", 0)), "subtext": "gradient boosting"},
     {"label": "Too-optimistic", "value": f"{best_too_opt*100:.0f}%", "subtext": "engines bias > +10"},
     {"label": "Cost of safety", "value": f"{cost_of_safety:+.1f}", "subtext": "safe − GB MAE", "sign": "pos" if cost_of_safety > 0 else "neg"},
 ]
 render_kpi_band(kpi_items)
 
 # ---------- Model scores table ----------
-st.markdown(
-    f"""
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Model scores — val engines (uncapped RUL)</div>
-      </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# ---------- Model scores tables ----------
+    POINT_PREDICTORS = ["constant", "random_forest", "gradient_boosting", "safe_side"]
+    UNCERTAINTY_MODELS = ["quantile_10", "quantile_90"]
 
-display_df = summary_df.copy()
-for col in ["engine_mean_mae", "engine_mean_rmse", "engine_mean_bias", "engine_worst_mae",
-            "pooled_mae", "pooled_rmse"]:
-    display_df[col] = display_df[col].apply(lambda v: f"{v:.1f}" if pd.notna(v) else "—")
-display_df["too_opt_engine_margin10"] = display_df["too_opt_engine_margin10"].apply(
-    lambda v: f"{v*100:.0f}%" if pd.notna(v) else "—"
-)
-display_df["nasa_score"] = display_df["nasa_score"].apply(lambda v: f"{v:,.0f}" if pd.notna(v) else "—")
+    def _nasa_for_model(col: str) -> float:
+        if col not in preds.columns:
+            return float("nan")
+        y_true = preds["RUL"].to_numpy(dtype=float)
+        y_pred = preds[col].to_numpy(dtype=float)
+        err = y_true - y_pred
+        s = np.where(err < 0, np.exp(-err / 13.0) - 1.0, np.exp(err / 10.0) - 1.0)
+        return float(np.sum(s))
 
-st.dataframe(
-    display_df[["model", "engine_mean_mae", "engine_mean_rmse", "engine_mean_bias",
-                "engine_worst_mae", "too_opt_engine_margin10", "nasa_score"]],
-    use_container_width=True,
-    hide_index=True,
-    column_config={
-        "model": "Model",
-        "engine_mean_mae": "Engine-mean MAE",
-        "engine_mean_rmse": "Engine-mean RMSE",
-        "engine_mean_bias": "Engine-mean bias",
-        "engine_worst_mae": "Worst MAE",
-        "too_opt_engine_margin10": "Too-opt @10",
-        "nasa_score": "NASA score",
-    },
-)
+    def _format_row(row: pd.Series, nasa_map: dict[str, float]) -> dict[str, str]:
+        return {
+            "Model": row["model"],
+            "Engine-mean MAE": f"{row['engine_mean_mae']:.1f}" if pd.notna(row["engine_mean_mae"]) else "—",
+            "Engine-mean RMSE": f"{row['engine_mean_rmse']:.1f}" if pd.notna(row["engine_mean_rmse"]) else "—",
+            "Engine-mean bias": f"{row['engine_mean_bias']:+.1f}" if pd.notna(row["engine_mean_bias"]) else "—",
+            "Worst MAE": f"{row['engine_worst_mae']:.1f}" if pd.notna(row["engine_worst_mae"]) else "—",
+            "Too-opt @10": f"{row['too_opt_engine_margin10']*100:.0f}%" if pd.notna(row["too_opt_engine_margin10"]) else "—",
+            "NASA score": _compact_num(nasa_map.get(row["model"].replace(" ", "_").lower(), 0)),
+        }
+
+    nasa_map = {m.replace("_", " ").title(): _nasa_for_model(m) for m in models}
+
+    st.markdown(
+        textwrap.dedent(f"""
+        <div class="panel">
+        <div class="panel-header">
+        <div class="panel-title">Model scores — point predictors, val engines (uncapped RUL)</div>
+        </div>
+        </div>
+        """).strip(),
+        unsafe_allow_html=True,
+    )
+
+    point_df = summary_df[summary_df["model"].isin([m.replace("_", " ").title() for m in POINT_PREDICTORS])].copy()
+    point_rows = [_format_row(r, nasa_map) for _, r in point_df.iterrows()]
+    st.dataframe(
+        pd.DataFrame(point_rows),
+        use_container_width=True,
+        hide_index=True,
+        column_config={c: st.column_config.NumberColumn(c) if c not in ("Model",) else st.column_config.TextColumn(c) for c in point_rows[0]},
+    )
+
+    st.markdown(
+        textwrap.dedent(f"""
+        <div class="panel">
+        <div class="panel-header">
+        <div class="panel-title">Uncertainty models — quantile predictions</div>
+        </div>
+        </div>
+        """).strip(),
+        unsafe_allow_html=True,
+    )
+
+    unc_df = summary_df[summary_df["model"].isin([m.replace("_", " ").title() for m in UNCERTAINTY_MODELS])].copy()
+    unc_rows = [_format_row(r, nasa_map) for _, r in unc_df.iterrows()]
+    st.dataframe(
+        pd.DataFrame(unc_rows),
+        use_container_width=True,
+        hide_index=True,
+        column_config={c: st.column_config.NumberColumn(c) if c not in ("Model",) else st.column_config.TextColumn(c) for c in unc_rows[0]},
+    )
 
 # ---------- Two columns: too-optimistic panel + coverage card ----------
 col1, col2 = st.columns([2, 1])
 
 with col1:
     st.markdown(
-        f"""
+        textwrap.dedent(f"""
         <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">Too-optimistic engines (margin = +10 flights)</div>
-          </div>
+        <div class="panel-header">
+        <div class="panel-title">Too-optimistic engines (margin = +10 flights)</div>
         </div>
-        """,
+        </div>
+        """).strip(),
         unsafe_allow_html=True,
     )
     # Horizontal bars: fraction of engines with bias > 10 per model
@@ -181,13 +221,13 @@ with col1:
 
 with col2:
     st.markdown(
-        f"""
+        textwrap.dedent(f"""
         <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">P10–P90 coverage vs nominal</div>
-          </div>
+        <div class="panel-header">
+        <div class="panel-title">P10–P90 coverage vs nominal</div>
         </div>
-        """,
+        </div>
+        """).strip(),
         unsafe_allow_html=True,
     )
     # Compute coverage from quantile predictions
@@ -198,14 +238,14 @@ with col2:
     nominal = 0.80
 
     st.markdown(
-        f"""
+        textwrap.dedent(f"""
         <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:500;color:#f2f4f8;">
-          {coverage*100:.1f}%
+        {coverage*100:.1f}%
         </div>
         <div style="font-size:11px;color:#6f7782;margin-top:4px;">
-          observed coverage · nominal {nominal*100:.0f}%
+        observed coverage · nominal {nominal*100:.0f}%
         </div>
-        """,
+        """).strip(),
         unsafe_allow_html=True,
     )
     if coverage < nominal:
@@ -219,19 +259,20 @@ with col2:
             unsafe_allow_html=True,
         )
     st.caption(
-        "Known limitation: P90 tends to over-predict (bias +40.42 on val). "
-        "Coverage 0.746 vs nominal 0.80."
+        f"Nominal coverage is the expected fraction of true RUL values inside the P10–P90 band (nominal {nominal*100:.0f}%). "
+        f"Known limitation: P90 tends to over-predict (bias +40.42 on val). "
+        f"Observed coverage {coverage*100:.1f}% vs nominal {nominal*100:.0f}%."
     )
 
 # ---------- Metrics explained ----------
 st.markdown(
-    f"""
+    textwrap.dedent(f"""
     <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Metrics explained</div>
-      </div>
+    <div class="panel-header">
+    <div class="panel-title">Metrics explained</div>
     </div>
-    """,
+    </div>
+    """).strip(),
     unsafe_allow_html=True,
 )
 
@@ -245,12 +286,12 @@ explanations = [
 ]
 for name, desc in explanations:
     st.markdown(
-        f"""
+        textwrap.dedent(f"""
         <div class="metric-row">
-          <div class="metric-name mono">{name}</div>
-          <div class="metric-explain">{desc}</div>
+        <div class="metric-name mono">{name}</div>
+        <div class="metric-explain">{desc}</div>
         </div>
-        """,
+        """).strip(),
         unsafe_allow_html=True,
     )
 

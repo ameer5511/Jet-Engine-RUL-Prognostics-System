@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import json
+import textwrap
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -37,6 +38,9 @@ from styles.tokens import (
     BORDER_HAIRLINE,
     NEGATIVE,
     POSITIVE,
+    SERIES_CONSTANT,
+    SERIES_RANDOM_FOREST,
+    SERIES_SAFE_SIDE,
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
@@ -122,28 +126,28 @@ render_kpi_band(kpi_items)
 
 # ---------- Provenance chips ----------
 st.markdown(
-    f"""
+    textwrap.dedent(f"""
     <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Fault provenance</div>
-      </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a2a9b0;">
-        {provenance_text} &nbsp;·&nbsp; Nemotron proposals are single-sensor extras, range-validated before use.
-      </div>
+    <div class="panel-header">
+    <div class="panel-title">Fault provenance</div>
     </div>
-    """,
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a2a9b0;">
+    {provenance_text} &nbsp;·&nbsp; Nemotron proposals are single-sensor extras, range-validated before use.
+    </div>
+    </div>
+    """).strip(),
     unsafe_allow_html=True,
 )
 
 # ---------- Controls ----------
 st.markdown(
-    f"""
+    textwrap.dedent(f"""
     <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Controls</div>
-      </div>
+    <div class="panel-header">
+    <div class="panel-title">Controls</div>
     </div>
-    """,
+    </div>
+    """).strip(),
     unsafe_allow_html=True,
 )
 
@@ -171,13 +175,13 @@ if not selected_models:
 
 # ---------- Chart A: Error increase vs fault size ----------
 st.markdown(
-    f"""
+    textwrap.dedent(f"""
     <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Chart A — Error increase vs fault size ({fault_kind})</div>
-      </div>
+    <div class="panel-header">
+    <div class="panel-title">Chart A — Error increase vs fault size ({fault_kind})</div>
     </div>
-    """,
+    </div>
+    """).strip(),
     unsafe_allow_html=True,
 )
 
@@ -212,15 +216,17 @@ for sname, svals in aggregate.items():
             }
         )
 
+# ---------- Shared model colours (consistent across all charts) ----------
+    MODEL_COLORS = {
+        "constant": SERIES_CONSTANT,          # gray
+        "random_forest": SERIES_RANDOM_FOREST,  # light blue
+        "gradient_boosting": "#f2a93b",       # amber/orange (distinct from RF blue)
+        "safe_side": SERIES_SAFE_SIDE,        # teal
+    }
+
 chart_df = pd.DataFrame(chart_data)
 if not chart_df.empty:
     fig_a = go.Figure()
-    model_colors = {
-        "constant": "#6f7782",
-        "random_forest": "#78a9ff",
-        "gradient_boosting": "#4589ff",
-        "safe_side": "#08bdba",
-    }
     for model in selected_models:
         mdf = chart_df[chart_df["model"] == model].sort_values("magnitude")
         if mdf.empty:
@@ -231,7 +237,7 @@ if not chart_df.empty:
                 y=mdf["delta_mae"],
                 mode="lines+markers",
                 name=model.replace("_", " ").title(),
-                line=dict(color=model_colors.get(model, ACCENT), width=1.5),
+                line=dict(color=MODEL_COLORS.get(model, ACCENT), width=1.5),
                 marker=dict(size=6),
                 hovertemplate="%{x}<br>ΔMAE %{y:+.1f}<extra></extra>",
             )
@@ -251,13 +257,13 @@ else:
 
 # ---------- Chart B: Cost of safety ----------
 st.markdown(
-    f"""
+    textwrap.dedent(f"""
     <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Chart B — Cost of safety ({fault_kind})</div>
-      </div>
+    <div class="panel-header">
+    <div class="panel-title">Chart B — Cost of safety ({fault_kind})</div>
     </div>
-    """,
+    </div>
+    """).strip(),
     unsafe_allow_html=True,
 )
 
@@ -291,7 +297,7 @@ if not cost_df.empty:
         go.Bar(
             x=cost_df["magnitude"],
             y=cost_df["cost"],
-            marker=dict(color=[NEGATIVE if c < 0 else POSITIVE for c in cost_df["cost"]]),
+            marker=dict(color=[POSITIVE if c < 0 else NEGATIVE for c in cost_df["cost"]]),
             hovertemplate="Magnitude %{x}<br>Cost %{y:+.1f}<extra></extra>",
         )
     )
@@ -308,13 +314,13 @@ if not cost_df.empty:
 
 # ---------- Heatmap: fault grid ----------
 st.markdown(
-    f"""
+    textwrap.dedent(f"""
     <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Heatmap — MAE increase by fault kind × magnitude</div>
-      </div>
+    <div class="panel-header">
+    <div class="panel-title">Heatmap — MAE increase by fault kind × magnitude</div>
     </div>
-    """,
+    </div>
+    """).strip(),
     unsafe_allow_html=True,
 )
 
@@ -346,11 +352,9 @@ if not heatmap_df.empty:
             x=[f"k{m:g}" for m in pivot.columns],
             y=[k.title() for k in pivot.index],
             colorscale=[
-                "#0f1b2d",
-                "#1d3557",
-                "#2a5db0",
-                "#4589ff",
-                "#a6c8ff",
+                [0.0, "#fa4d56"],    # NEGATIVE red for low ΔMAE (improvement)
+                [0.5, "#12151a"],    # dark panel grey for neutral
+                [1.0, "#4589ff"],    # ACCENT blue for high ΔMAE (degradation)
             ],
             colorbar=dict(title="Δ MAE", titleside="right", tickfont=dict(size=9)),
             hovertemplate="Kind %{y}<br>Magnitude %{x}<br>ΔMAE %{z:+.1f}<extra></extra>",
@@ -371,18 +375,22 @@ if not heatmap_df.empty:
                     font=dict(size=9, color="white", family="IBM Plex Mono"),
                 )
     st.plotly_chart(fig_hm, use_container_width=True)
+    st.caption(
+        "Diverging scale: red = MAE improvement (negative ΔMAE), blue = degradation (positive ΔMAE). "
+        "Each fault kind uses different magnitudes, so empty cells and gaps are expected."
+    )
 else:
     st.info("No heatmap data available.")
 
 # ---------- Stress results table ----------
 st.markdown(
-    f"""
+    textwrap.dedent(f"""
     <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Stress results — scenario × model × seed (mean ± std)</div>
-      </div>
+    <div class="panel-header">
+    <div class="panel-title">Stress results — scenario × model × seed (mean ± std)</div>
     </div>
-    """,
+    </div>
+    """).strip(),
     unsafe_allow_html=True,
 )
 
@@ -413,6 +421,10 @@ if not stress_csv.empty:
     agg_df = pd.DataFrame(agg_rows)
     if not agg_df.empty:
         st.dataframe(agg_df, use_container_width=True, hide_index=True)
+        st.caption(
+            "Results averaged over 5 seeds (mean ± std shown). "
+            "Differences smaller than the std are not statistically meaningful."
+        )
     else:
         st.info("No results for the selected filters.")
 else:

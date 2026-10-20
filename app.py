@@ -7,6 +7,7 @@ Never trains models, never calls Nemotron.
 from __future__ import annotations
 
 import base64
+import textwrap
 from pathlib import Path
 
 import streamlit as st
@@ -394,23 +395,23 @@ def render_hero_banner() -> None:
     )
 
     st.markdown(
-        f"""
+        textwrap.dedent(f"""
         <div class="hero">
-          {image_html}
-          <div class="hero-overlay"></div>
-          <div class="hero-badge">SNAPSHOT</div>
-          <div class="hero-content">
-            <div class="hero-name">{PRODUCT_NAME.upper()}</div>
-            <div class="hero-subtitle">Remaining useful life prediction and sensor-fault stress testing for turbofan engines.</div>
-            <div class="hero-desc">
-              Predicts how many flights a simulated turbofan engine has left, then stress-tests
-              those predictions with noisy, drifting and missing sensor readings.
-            </div>
-            <div class="hero-chips">{chips}</div>
-          </div>
-          {fallback_html}
+        {image_html}
+        <div class="hero-overlay"></div>
+        <div class="hero-badge">SNAPSHOT</div>
+        <div class="hero-content">
+        <div class="hero-name">{PRODUCT_NAME.upper()}</div>
+        <div class="hero-subtitle">Remaining useful life prediction and sensor-fault stress testing for turbofan engines.</div>
+        <div class="hero-desc">
+        Predicts how many flights a simulated turbofan engine has left, then stress-tests
+        those predictions with noisy, drifting and missing sensor readings.
         </div>
-        """,
+        <div class="hero-chips">{chips}</div>
+        </div>
+        {fallback_html}
+        </div>
+        """).strip(),
         unsafe_allow_html=True,
     )
 
@@ -422,17 +423,17 @@ def render_hero_banner() -> None:
 def render_top_bar() -> None:
     """Top bar for Model Comparison and Stress Lab (not Engine View)."""
     st.markdown(
-        f"""
+        textwrap.dedent(f"""
         <div class="top-bar">
-          <div>
-            <div class="top-bar-left">{PRODUCT_NAME.upper()}</div>
-            <div class="top-bar-subtitle">FD001 · NASA C-MAPSS</div>
-          </div>
-          <div class="top-bar-right">
-            <span class="badge">SNAPSHOT</span>
-          </div>
+        <div>
+        <div class="top-bar-left">{PRODUCT_NAME.upper()}</div>
+        <div class="top-bar-subtitle">FD001 · NASA C-MAPSS</div>
         </div>
-        """,
+        <div class="top-bar-right">
+        <span class="badge">SNAPSHOT</span>
+        </div>
+        </div>
+        """).strip(),
         unsafe_allow_html=True,
     )
 
@@ -463,9 +464,10 @@ def render_sidebar() -> None:
 
     status = artifact_status()
     status_lines = []
-    status_lines.append(f"Dataset: FD001")
-    status_lines.append(f"Artifacts: {{'OK' if status['predictions_csv'] and status['metrics_json'] else 'missing'}}")
-    status_lines.append(f"Nemotron scenarios: {{len(load_nemotron_settings())}}")
+    status_lines.append("Dataset: FD001")
+    artifacts_ok = status['predictions_csv'] and status['metrics_json']
+    status_lines.append(f"Artifacts: {'OK' if artifacts_ok else 'missing'}")
+    status_lines.append(f"Nemotron scenarios: {len(load_nemotron_settings())}")
     status_lines.append("Read-only: precomputed results")
 
     for line in status_lines:
@@ -478,7 +480,9 @@ def render_sidebar() -> None:
     st.sidebar.markdown(
         f"<div style='font-family:\"IBM Plex Mono\",monospace;font-size:9px;"
         f"color:{TEXT_MUTED};margin-top:24px;border-top:1px solid {BORDER_HAIRLINE};"
-        f"padding-top:8px;'>{PRODUCT_NAME.upper()} · GITHUB</div>",
+        f"padding-top:8px;'>{PRODUCT_NAME.upper()} · "
+        f"<a href='https://github.com/ameer5511/Jet-Engine-RUL-Prognostics-System' "
+        f"target='_blank' style='color:{ACCENT};text-decoration:none;'>GitHub</a></div>",
         unsafe_allow_html=True,
     )
 
@@ -487,12 +491,12 @@ def render_footer(snapshot_date: str | None = None) -> None:
     """Footer on every page."""
     date_text = snapshot_date or "—"
     st.markdown(
-        f"""
+        textwrap.dedent(f"""
         <div class="footer">
-          SIMULATED DATA · NOT FOR OPERATIONAL USE · CHARTS BY PLOTLY ·
-          GENERATED {date_text}
+        SIMULATED DATA · NOT FOR OPERATIONAL USE · CHARTS BY PLOTLY ·
+        GENERATED {date_text}
         </div>
-        """,
+        """).strip(),
         unsafe_allow_html=True,
     )
 
@@ -512,11 +516,30 @@ def render_kpi_band(items: list[dict[str, str]]) -> None:
             sign_cls = "kpi-sign-pos"
         elif item.get("sign") == "neg":
             sign_cls = "kpi-sign-neg"
-        cells += f"""
+        cells += textwrap.dedent(f"""
         <div class="kpi-cell">
-          <div class="kpi-label">{item['label']}</div>
-          <div class="kpi-value mono {sign_cls}">{item['value']}</div>
-          <div class="kpi-subtext">{item.get('subtext','')}</div>
+        <div class="kpi-label">{item['label']}</div>
+        <div class="kpi-value mono {sign_cls}">{item['value']}</div>
+        <div class="kpi-subtext">{item.get('subtext','')}</div>
         </div>
-        """
+        """).strip()
     st.markdown(f'<div style="display:flex;gap:0;flex-wrap:wrap;">{cells}</div>', unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------------------
+# Navigation entry point
+# ---------------------------------------------------------------------------
+
+pg = st.navigation(
+    {
+        "Overview": [
+            st.Page("0_Overview.py", title="Overview", default=True),
+        ],
+        "Explore": [
+            st.Page("1_Engine_View.py", title="Engine View"),
+            st.Page("2_Model_Comparison.py", title="Model Comparison"),
+            st.Page("3_Stress_Lab.py", title="Stress Lab"),
+        ],
+    }
+)
+pg.run()

@@ -7,6 +7,7 @@ Read-only: reads results/phase2_val_predictions.csv only.
 from __future__ import annotations
 
 import sys
+import textwrap
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -20,7 +21,6 @@ from app import (
     render_footer,
     render_sidebar,
     render_disclaimer_strip,
-    render_hero_banner,
     render_top_bar,
     render_kpi_band,
 )
@@ -59,7 +59,6 @@ from app import inject_global_css
 inject_global_css()
 
 render_sidebar()
-render_hero_banner()
 render_disclaimer_strip()
 
 # ---------- Data ----------
@@ -77,7 +76,7 @@ models = get_prediction_models()
 # ---------- Header: engine + cycle selection ----------
 col_engine, col_cycle = st.columns([3, 1])
 with col_engine:
-    engine_id = st.selectbox("Engine", engines, index=0, label_visibility="collapsed")
+    engine_id = st.selectbox("Engine ID", engines, index=0)
 with col_cycle:
     pass  # cycle slider below after we know engine
 
@@ -107,23 +106,31 @@ true_rul = float(r["RUL"])
 preds_at_cycle = {m: float(r[m]) for m in models if m in r.index and pd.notna(r[m])}
 
 # Header chips: predicted RUL at cycle
-st.markdown(
-    f"""
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
-      <div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:600;
+    gb_pred = preds_at_cycle.get("gradient_boosting", preds_at_cycle.get(models[0], 0))
+    health = ("Critical" if gb_pred < 30 else "Warning" if gb_pred < 60 else "Healthy")
+    health_color = {"Critical": "#f26464", "Warning": "#f2a93b", "Healthy": "#6fd08a"}[health]
+
+    st.markdown(
+        textwrap.dedent(f"""
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
+        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:600;
         text-transform:uppercase;letter-spacing:0.08em;color:#a2a9b0;">
         ENGINE {engine_id}
-      </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;color:#f2f4f8;">
-        {preds_at_cycle.get(models[0], 0):.0f} flights left
-      </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6f7782;">
-        True: {true_rul:.0f} &nbsp;·&nbsp; Δ: {(preds_at_cycle.get(models[0],0)-true_rul):+.0f}
-      </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;color:#f2f4f8;">
+        {gb_pred:.0f} flights left
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6f7782;">
+        True: {true_rul:.0f} &nbsp;·&nbsp; Δ: {(gb_pred-true_rul):+.0f}
+        </div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
+        color:{health_color};border:1px solid {health_color};padding:2px 8px;border-radius:2px;">
+        {health}
+        </span>
+        </div>
+        """).strip(),
+        unsafe_allow_html=True,
+    )
 
 # ---------- KPI band ----------
 per_engine = {}
@@ -182,6 +189,7 @@ for m in models:
             mode="lines",
             name=m.replace("_", " ").title(),
             line=dict(color=model_colors.get(m, ACCENT), width=1.5),
+            visible=True if m == "gradient_boosting" else "legendonly",
             hovertemplate=f"Cycle %{{x}}<br>{m.replace('_', ' ').title()} %{{y:.1f}}<extra></extra>",
         )
     )
@@ -206,7 +214,7 @@ fig.add_vline(
     x=cycle,
     line=dict(color=ACCENT, width=1, dash="dash"),
     annotation_text=f"Cycle {cycle}",
-    annotation_position="top right",
+    annotation_position="bottom right",
     annotation_font=dict(size=10, color=TEXT_MUTED),
 )
 
@@ -217,19 +225,19 @@ fig.update_layout(
     height=420,
     hovermode="x unified",
 )
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 # ---------- Table: last 10-20 cycles ----------
-st.markdown(
-    f"""
-    <div class="panel">
-      <div class="panel-header">
+    st.markdown(
+        textwrap.dedent(f"""
+        <div class="panel">
+        <div class="panel-header">
         <div class="panel-title">Last 20 cycles — Engine {engine_id}</div>
-      </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        </div>
+        </div>
+        """).strip(),
+        unsafe_allow_html=True,
+    )
 
 table_df = eng_df.tail(20).copy()
 display_cols = ["cycle", "RUL"] + models
@@ -238,6 +246,6 @@ table_df["cycle"] = table_df["cycle"].astype(int)
 table_df = table_df.round(1)
 table_df.columns = ["Cycle", "True RUL"] + [m.replace("_", " ").title() for m in models]
 
-st.dataframe(table_df, use_container_width=True, hide_index=True)
+st.dataframe(table_df, use_container_width=True, hide_index=True, height=420)
 
 render_footer()
