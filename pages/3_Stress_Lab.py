@@ -90,24 +90,23 @@ else:
     provenance_text += " · grid only"
 
 # ---------- KPI band ----------
-# Worst fault: max degradation across all models/scenarios from clean baseline
-clean_mae = {}
+# Worst fault: max GB degradation across all scenarios from clean baseline
+# (matches heatmap which uses GB only)
+clean_gb_mae = 0.0
 if "clean" in aggregate:
-    for model, vals in aggregate["clean"].items():
-        clean_mae[model] = float(vals["engine_mean_mae"]["mean"])
+    clean_gb_mae = float(aggregate["clean"]["gradient_boosting"]["engine_mean_mae"]["mean"])
 
 worst_increase = 0.0
 worst_scenario = "—"
 for sname, svals in aggregate.items():
     if sname == "clean":
         continue
-    for model, mvals in svals.items():
-        inc = float(mvals["engine_mean_mae"]["mean"]) - clean_mae.get(model, 0)
-        if inc > worst_increase:
-            worst_increase = inc
-            worst_scenario = sname
+    gb_inc = float(svals["gradient_boosting"]["engine_mean_mae"]["mean"]) - clean_gb_mae
+    if gb_inc > worst_increase:
+        worst_increase = gb_inc
+        worst_scenario = sname
 
-# Cost of safety at worst scenario
+# Cost of safety at worst scenario (safe-side MAE − GB MAE)
 if worst_scenario != "—" and worst_scenario in aggregate:
     ss = float(aggregate[worst_scenario]["safe_side"]["engine_mean_mae"]["mean"])
     gb = float(aggregate[worst_scenario]["gradient_boosting"]["engine_mean_mae"]["mean"])
@@ -269,8 +268,6 @@ st.markdown(
 
 cost_data = []
 for sname, svals in aggregate.items():
-    if sname == "clean":
-        continue
     parts = sname.split("_")
     if len(parts) >= 2:
         skind = parts[0]
@@ -287,6 +284,13 @@ for sname, svals in aggregate.items():
             "magnitude": float(smag),
             "cost": ss - gb,
         }
+    )
+# Add clean baseline at magnitude 0
+if "clean" in aggregate:
+    ss_clean = float(aggregate["clean"]["safe_side"]["engine_mean_mae"]["mean"])
+    gb_clean = float(aggregate["clean"]["gradient_boosting"]["engine_mean_mae"]["mean"])
+    cost_data.append(
+        {"scenario": "clean", "magnitude": 0.0, "cost": ss_clean - gb_clean}
     )
 
 cost_df = pd.DataFrame(cost_data)
@@ -352,9 +356,9 @@ if not heatmap_df.empty:
             x=[f"k{m:g}" for m in pivot.columns],
             y=[k.title() for k in pivot.index],
             colorscale=[
-                [0.0, "#fa4d56"],    # NEGATIVE red for low ΔMAE (improvement)
+                [0.0, "#4589ff"],    # blue for low/negative ΔMAE (improvement)
                 [0.5, "#12151a"],    # dark panel grey for neutral
-                [1.0, "#4589ff"],    # ACCENT blue for high ΔMAE (degradation)
+                [1.0, "#fa4d56"],    # red for high ΔMAE (degradation / worse)
             ],
             colorbar=dict(title="Δ MAE", titleside="right", tickfont=dict(size=9)),
             hovertemplate="Kind %{y}<br>Magnitude %{x}<br>ΔMAE %{z:+.1f}<extra></extra>",
@@ -376,7 +380,7 @@ if not heatmap_df.empty:
                 )
     st.plotly_chart(fig_hm, use_container_width=True)
     st.caption(
-        "Diverging scale: red = MAE improvement (negative ΔMAE), blue = degradation (positive ΔMAE). "
+        "Diverging scale: blue = MAE improvement (negative ΔMAE), red = degradation (positive ΔMAE, worse). "
         "Each fault kind uses different magnitudes, so empty cells and gaps are expected."
     )
 else:

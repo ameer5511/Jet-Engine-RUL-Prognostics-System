@@ -42,24 +42,24 @@ headline = "—"
 cost_of_safety = "—"
 too_opt_gb = "—"
 too_opt_ss = "—"
-if metrics and not preds.empty:
-    per_model = metrics.get("per_model", {})
-    gb_agg = per_model.get("gradient_boosting", {}).get("aggregate", {})
-    ss_agg = per_model.get("safe_side", {}).get("aggregate", {})
+if not preds.empty:
+    import numpy as np
+    gb_mae = float(np.mean(np.abs(preds["gradient_boosting"] - preds["RUL"])))
+    ss_mae = float(np.mean(np.abs(preds["safe_side"] - preds["RUL"])))
+    cost_of_safety = ss_mae - gb_mae
+    if metrics:
+        per_model = metrics.get("per_model", {})
+        gb_agg = per_model.get("gradient_boosting", {}).get("aggregate", {})
+        ss_agg = per_model.get("safe_side", {}).get("aggregate", {})
 
-    def _mean(d, key):
-        v = d.get(key)
-        if isinstance(v, dict):
-            return v.get("mean")
-        return v
+        def _mean(d, key):
+            v = d.get(key)
+            if isinstance(v, dict):
+                return v.get("mean")
+            return v
 
-    gb_mae = _mean(gb_agg, "engine_mean_mae")
-    ss_mae = _mean(ss_agg, "engine_mean_mae")
-    gb_too = _mean(gb_agg, "too_opt_engine_margin10")
-    ss_too = _mean(ss_agg, "too_opt_engine_margin10")
-
-    if gb_mae is not None and ss_mae is not None:
-        cost_of_safety = ss_mae - gb_mae
+        gb_too = _mean(gb_agg, "too_opt_engine_margin10")
+        ss_too = _mean(ss_agg, "too_opt_engine_margin10")
     if gb_too is not None:
         too_opt_gb = gb_too * 100
     if ss_too is not None:

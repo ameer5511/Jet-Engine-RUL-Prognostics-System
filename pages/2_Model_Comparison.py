@@ -75,13 +75,13 @@ best_row = summary_df.loc[summary_df["engine_mean_mae"].idxmin()]
 best_model = best_row["model"]
 best_mae = float(best_row["engine_mean_mae"])
 
-# NASA score per model
+# NASA score at last cycle per model (Saxena & Goebel PHM 2008)
 nasa_scores = {}
 for m in models:
     y_true = preds["RUL"].to_numpy(dtype=float)
     y_pred = preds[m].to_numpy(dtype=float)
-    err = y_true - y_pred
-    s = np.where(err < 0, np.exp(-err / 13.0) - 1.0, np.exp(err / 10.0) - 1.0)
+    d = y_pred - y_true
+    s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
     nasa_scores[m] = float(np.sum(s))
 
 def _compact_num(v: float) -> str:
@@ -93,13 +93,20 @@ def _compact_num(v: float) -> str:
     return f"{v:,.0f}"
 
 
-# Cost of safety: safe_side MAE - GB MAE on val
+# Cost of safety: safe_side MAE − GB MAE on val (pooled, same engines for both)
 ss_mae = float(np.mean(np.abs(preds["safe_side"] - preds["RUL"])))
 gb_mae = float(np.mean(np.abs(preds["gradient_boosting"] - preds["RUL"])))
 cost_of_safety = ss_mae - gb_mae
 
-# Too-optimistic rate (pooled rows > +10)
-best_too_opt = float(best_row["too_opt_engine_margin10"]) if pd.notna(best_row["too_opt_engine_margin10"]) else 0.0
+# NASA score per model at last cycle (for table)
+def _nasa_for_model(col: str) -> float:
+    if col not in preds.columns:
+        return float("nan")
+    y_true = preds["RUL"].to_numpy(dtype=float)
+    y_pred = preds[col].to_numpy(dtype=float)
+    d = y_pred - y_true
+    s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
+    return float(np.sum(s))
 
 kpi_items = [
     {"label": "Best model", "value": best_model, "subtext": "by engine-mean MAE"},
@@ -120,8 +127,8 @@ def _nasa_for_model(col: str) -> float:
         return float("nan")
     y_true = preds["RUL"].to_numpy(dtype=float)
     y_pred = preds[col].to_numpy(dtype=float)
-    err = y_true - y_pred
-    s = np.where(err < 0, np.exp(-err / 13.0) - 1.0, np.exp(err / 10.0) - 1.0)
+    d = y_pred - y_true
+    s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
     return float(np.sum(s))
 
 
@@ -133,7 +140,7 @@ def _format_row(row: pd.Series, nasa_map: dict[str, float]) -> dict[str, str]:
         "Engine-mean bias": f"{row['engine_mean_bias']:+.1f}" if pd.notna(row["engine_mean_bias"]) else "—",
         "Worst MAE": f"{row['engine_worst_mae']:.1f}" if pd.notna(row["engine_worst_mae"]) else "—",
         "Too-opt @10": f"{row['too_opt_engine_margin10']*100:.0f}%" if pd.notna(row["too_opt_engine_margin10"]) else "—",
-        "NASA score": _compact_num(nasa_map.get(row["model"].replace(" ", "_").lower(), 0)),
+        "NASA score": _compact_num(nasa_map.get(row["model"], 0)),
     }
 
 
@@ -282,7 +289,7 @@ explanations = [
     ("MAE", "Mean absolute error — average |prediction − truth| across cycles. Lower is better."),
     ("RMSE", "Root mean squared error — penalises large errors more than MAE."),
     ("Bias", "Mean signed error (prediction − truth). Positive = over-predict / optimistic / dangerous."),
-    ("NASA score", "Asymmetric penalty per row: exp(−d/13)−1 if prediction too high; exp(d/10)−1 if too low. Lower is better."),
+    ("NASA score", "Asymmetric penalty at last cycle per engine: d = pred − truth; d ≥ 0 (over-predict, dangerous): exp(d/10)−1 (steeper); d < 0 (under-predict, safe): exp(−d/13)−1. Lower is better."),
     ("Too-optimistic @10", "Fraction of engines whose mean bias exceeds +10 flights (predicts at least 10 flights too far)."),
     ("Cost of safety", "safe-side MAE − gradient-boosting MAE. Positive = cautious model pays extra error."),
 ]

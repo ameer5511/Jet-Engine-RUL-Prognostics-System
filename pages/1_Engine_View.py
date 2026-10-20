@@ -153,7 +153,7 @@ kpi_items = [
     {"label": "RMSE", "value": f"{per_engine[models[0]]['rmse']:.1f}", "subtext": "root mean sq error"},
     {"label": "Bias", "value": f"{per_engine[models[0]]['bias']:+.1f}", "subtext": "+ optimistic", "sign": "pos" if per_engine[models[0]]['bias'] > 0 else "neg"},
     {"label": "Worst MAE", "value": f"{per_engine[models[0]]['worst_mae']:.1f}", "subtext": "max abs error"},
-    {"label": "Too-optimistic", "value": f"{per_engine[models[0]]['too_opt']*100:.0f}%", "subtext": "engines > +10"},
+    {"label": "Too-optimistic", "value": f"{per_engine[models[0]]['too_opt']*100:.0f}%", "subtext": "cycles err > +10"},
 ]
 render_kpi_band(kpi_items)
 
@@ -194,12 +194,14 @@ for m in models:
         )
     )
 
-# P10-P90 band
+# P10-P90 band (sort so Q10 ≤ Q90 at every cycle; quantile crossing is possible)
 if "quantile_10" in models and "quantile_90" in models:
+    q_lo = eng_df[["quantile_10", "quantile_90"]].min(axis=1)
+    q_hi = eng_df[["quantile_10", "quantile_90"]].max(axis=1)
     fig.add_trace(
         go.Scatter(
             x=eng_df["cycle"].tolist() + eng_df["cycle"][::-1].tolist(),
-            y=eng_df["quantile_90"].tolist() + eng_df["quantile_10"][::-1].tolist(),
+            y=q_hi.tolist() + q_lo[::-1].tolist(),
             fill="toself",
             fillcolor=SERIES_P10_P90_BAND,
             line=dict(color="rgba(0,0,0,0)"),

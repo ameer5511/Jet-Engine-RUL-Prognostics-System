@@ -2,15 +2,20 @@
 
 Sign convention
 ---------------
-``error = prediction - truth``.
-For RUL, a *positive* error means we predicted **too many flights left**
-(optimistic / dangerous). A negative error is conservative.
+``d = prediction - truth``.
+For RUL, a *positive* d means we predicted **too many flights left**
+(optimistic / dangerous). A negative d is conservative.
+
+NASA C-MAPSS asymmetric score (Saxena & Goebel, PHM 2008):
+    d < 0  (under-prediction, safe):   s = exp(-d/13) - 1   (less steep, rate 1/13)
+    d >= 0 (over-prediction, dangerous): s = exp(d/10) - 1   (steeper, rate 1/10)
 
 Aggregation (see MASTER_SPEC.md A6)
 -----------------------------------
 Primary metrics are per-engine: each engine is reduced to one value, then we
 average over engines so a long test does not dominate a short one. A secondary
-final-cycle view uses each engine's last recorded cycle.
+final-cycle view uses each engine's last recorded cycle. The NASA score is
+computed at each engine's last cycle only (not pooled over all rows).
 """
 from __future__ import annotations
 
@@ -104,49 +109,58 @@ def interval_coverage(y_true, low, high) -> float:
     return float(np.mean((y >= lo) & (y <= hi)))
 
 
-def nasa_score(y_true, y_pred) -> float:
-    """Pooled NASA C-MAPSS asymmetric score (Saxena & Goebel, PHM 2008).
+def nasa_score(d: np.ndarray) -> float:
+    """NASA C-MAPSS asymmetric score on an array of errors d = pred − truth.
 
-    Per-row error: ``e_i = truth_i - pred_i``.
+    Per-engine last-cycle errors only (caller slices to last cycle).
+        d < 0  (under-prediction, safe):   s = exp(-d/13) - 1   (less steep)
+        d >= 0 (over-prediction, dangerous): s = exp(d/10) - 1   (steeper)
 
-        e_i < 0  (prediction too HIGH / optimistic / dangerous):
-            s_i = exp(-e_i / 13) - 1   -> rate 1/13 per unit over-predict
-        e_i >= 0 (prediction too LOW / conservative / safe):
-            s_i = exp(e_i / 10) - 1    -> rate 1/10 per unit under-predict
-
-    Returns sum_i s_i. Lower is better.
+    Returns sum. Lower is better.
     """
-    y = _as_float(y_true)
-    p = _as_float(y_pred)
-    e = y - p
-    s = np.where(e < 0, np.exp(-e / 13.0) - 1.0, np.exp(e / 10.0) - 1.0)
+    d = _as_float(d)
+    s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
     return float(np.sum(s))
+
+
+def nasa_score_at_last_cycle(
+    frame: pd.DataFrame,
+    engine_col: str = "unit",
+    cycle_col: str = "cycle",
+    true_col: str = "RUL",
+    pred_col: str = "pred",
+) -> float:
+    """NASA score summed over each engine's LAST recorded cycle only.
+
+    Not pooled over all rows — one error per engine at the final cycle.
+    """
+    last = frame.groupby(engine_col)[cycle_col].transform("max")
+    last_cycle = frame.loc[frame[cycle_col] == last].copy()
+    d = _as_float(last_cycle[pred_col]) - _as_float(last_cycle[true_col])
+    return nasa_score(d)
 
 
 def nasa_score_per_engine(
     frame: pd.DataFrame,
     engine_col: str = "unit",
+    cycle_col: str = "cycle",
     true_col: str = "RUL",
     pred_col: str = "pred",
 ) -> pd.DataFrame:
-    """NASA score summed per engine, plus mean and row count.
+    """NASA score summed per engine at last cycle.
 
-    Returns columns: engine, n, nasa_score_sum, nasa_score_mean.
+    Returns columns: engine, nasa_score.
     """
-    for col in (engine_col, true_col, pred_col):
+    for col in (engine_col, cycle_col, true_col, pred_col):
         if col not in frame.columns:
             raise KeyError(f"missing column: {col}")
-    e = _as_float(frame[true_col]) - _as_float(frame[pred_col])
-    s = np.where(e < 0, np.exp(-e / 13.0) - 1.0, np.exp(e / 10.0) - 1.0)
-    work = pd.DataFrame({"engine": frame[engine_col].to_numpy(), "s": s})
+    last = frame.groupby(engine_col)[cycle_col].transform("max")
+    last_cycle = frame.loc[frame[cycle_col] == last].copy()
+    d = _as_float(last_cycle[pred_col]) - _as_float(last_cycle[true_col])
+    s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
+    work = pd.DataFrame({"engine": last_cycle[engine_col].to_numpy(), "s": s})
     grouped = work.groupby("engine")
-    out = pd.DataFrame(
-        {
-            "n": grouped.size(),
-            "nasa_score_sum": grouped["s"].sum(),
-            "nasa_score_mean": grouped["s"].mean(),
-        }
-    )
+    out = pd.DataFrame({"nasa_score": grouped["s"].sum()})
     return out.reset_index()
 
 
