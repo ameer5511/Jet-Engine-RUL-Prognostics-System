@@ -31,9 +31,11 @@ both the *robustness* of RUL models to sensor faults and the *cost of safety*
 NVIDIA **Nemotron 3.5 Lightning 30B-A3B** (free hosted endpoint,
 `https://integrate.api.nvidia.com/v1`, keyed by `NVIDIA_API_KEY`) has exactly one
 job: it *proposes* fault settings to test. Our code validates every suggestion
-against a strict schema and computes every number. Nemotron is optional — the
-pipeline runs fully offline with a fixed fault grid if Nemotron is unavailable,
-and it can be pointed at Nebius Token Factory instead via `NVIDIA_BASE_URL`.
+against a strict schema and computes every number. Nemotron-3.5-Lightning is a
+required dependency — the pipeline calls it to propose extra fault settings,
+validates every suggestion against a strict schema, and caches results so
+reruns are deterministic and cost nothing. It can be pointed at Nebius Token
+Factory instead via `NVIDIA_BASE_URL`.
 
 > **Disclaimer.** All data is NASA's C-MAPSS simulation, not real engine data.
 > Research/portfolio use only — not for real maintenance or airworthiness decisions.
@@ -114,9 +116,9 @@ Copy the environment template and fill in your credentials:
 cp .env.example .env      # then edit .env
 ```
 
-Nemotron is only called by `scenarios.py`. Validated suggestions are cached to
-`results/`, so reruns are deterministic and cost nothing. Use `--offline` to run
-grid-only.
+Nemotron-3.5-Lightning is only called by `scenarios.py`. Validated suggestions
+are cached to `results/`, so reruns are deterministic and cost nothing. Use
+`--offline` only if the NVIDIA endpoint is unreachable.
 
 ### Labels & metrics
 
@@ -124,8 +126,8 @@ Training targets use **uncapped RUL** so predictions span the full true range,
 matching metrics which score against uncapped truth. The historical C-MAPSS cap
 of 125 is retained for reference only (it previously caused systematic
 under-prediction and biased coverage numbers).
- Exact model name, endpoint, and request format must be confirmed in the
-Token Factory console (Open Question B5 in `MASTER_SPEC.md`).
+Exact model name, endpoint, and request format confirmed in the console:
+`nvidia/nemotron-3.5-lightning-30b-a3b` at `https://integrate.api.nvidia.com/v1`.
 
 ## Disclaimer
 

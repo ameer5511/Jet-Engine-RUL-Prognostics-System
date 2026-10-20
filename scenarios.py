@@ -286,7 +286,7 @@ def get_scenarios(
         seen.add(key)
         scenarios.append(_make_scenario(name, config.kind, config.magnitude, settings, "grid"))
 
-    # ---- nemotron (optional) ----
+    # ---- nemotron ----
     nemotron_cfg = cfg.get("nemotron", {})
     max_calls = int(nemotron_cfg.get("max_calls", _env("NEMOTRON_MAX_CALLS", "5")))
     use_cache = bool(nemotron_cfg.get("cache_file", True)) or _cache_path().exists()

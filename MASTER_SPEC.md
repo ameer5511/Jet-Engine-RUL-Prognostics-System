@@ -19,7 +19,7 @@ A RUL (Remaining Useful Life) pipeline on NASA C-MAPSS **FD001** with three part
 
 **Headline question:** When sensors go bad, does the safe-side model stay safe, and how many flights of early maintenance does that safety cost?
 
-**NVIDIA dependency:** Nemotron Nano (via Nebius Token Factory) proposes candidate fault settings only. Our code validates every suggestion and produces every number.
+**NVIDIA dependency:** Nemotron-3.5-Lightning (via Nebius Token Factory, model `nvidia/nemotron-3.5-lightning-30b-a3b`) proposes candidate fault settings only. Our code validates every suggestion and produces every number.
 
 **Out of scope for the hackathon:** FD002–FD004, N-CMAPSS, neural nets (GRU/LSTM), custom NASA-score loss, anomaly alarms, drift monitoring, chatbot, own API, database, accounts, 3D plots, real hardware.
 
@@ -33,12 +33,12 @@ A RUL (Remaining Useful Life) pipeline on NASA C-MAPSS **FD001** with three part
 - Four models: constant, RF, GB, safe-side quantile GB (+ P10/P90).
 - Metrics: MAE (main), RMSE, NASA score, too-optimistic rate.
 - Robustness Lab: 3 fault types × 4 magnitudes, fixed seeds.
-- Nemotron Nano proposing extra fault settings, validated and saved.
+- Nemotron-3.5-Lightning proposing extra fault settings, validated and saved.
 - Streamlit dashboard on Nebius: engine view, model comparison, stress-test charts.
 - Public GitHub repo, MIT licence, README, <3 min video, written feedback.
 
 **Cut order if time runs short**
-1. Nemotron suggestions → fixed grid only, keep a small *checked* notes-writer so an NVIDIA model is still used.
+1. If Nemotron is unavailable → fixed grid only, keep a small *checked* notes-writer so an NVIDIA model is still used.
 2. Dashboard polish.
 3. One fault type.
 
@@ -221,7 +221,7 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 - **Accept:** all train; all beat constant on validation MAE; safe-side is ≤ main on too-optimistic rate (directional) at fixed margin; ranges produced; coverage reported.
 
 ### Phase 3 — Robustness Lab
-- `faults.py` (3 kinds × 4 magnitudes, fixed seeds) + `scenarios.py` (Nemotron optional, validated, cached, union with grid).
+- `faults.py` (3 kinds × 4 magnitudes, fixed seeds) + `scenarios.py` (Nemotron-3.5-Lightning validated, cached, union with grid).
 - **Accept:** faults only on held-out data; invalid suggestions rejected; `--offline` works; artifacts saved with a schema/version.
 
 ### Phase 4 — Stress Test & Evaluate (DONE)

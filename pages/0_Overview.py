@@ -129,7 +129,7 @@ how_it_works = [
     ("Models", "Six models: Constant, Random Forest, Gradient Boosting (point predictors), Safe-side quantile GB (alpha=0.30), P10 and P90 quantile models. No neural nets."),
     ("Score", "NASA C-MAPSS asymmetric scoring (Saxena & Goebel PHM 2008): exp(−d/13)−1 if prediction too high (dangerous); exp(d/10)−1 if too low. Lower is better."),
     ("Stress Lab", "Controlled sensor faults — noise, drift, missing readings — applied across magnitudes with 5 seeds each. Measures ΔMAE vs clean baseline and cost of safety."),
-    ("Nemotron", "NVIDIA Nemotron-3.5-Lightning used as an optional fault-scenario generator; proposals are range-validated before use. Nemotron scenarios cached separately."),
+    ("Nemotron", "NVIDIA Nemotron-3.5-Lightning proposes fault-scenario settings; proposals are range-validated by our code before use. Nemotron scenarios cached separately."),
     ("Dashboard", "Read-only from precomputed artifacts under results/. Dark theme, IBM Plex fonts, 2D charts only. Always shows the simulation disclaimer."),
 ]
 

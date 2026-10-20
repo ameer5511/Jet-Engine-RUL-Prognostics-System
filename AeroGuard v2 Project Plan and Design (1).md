@@ -29,7 +29,7 @@ Nemotron, NVIDIA's open model, runs through Nebius Token Factory and has one sma
 - Four models: a constant baseline, Random Forest, gradient boosting, and a safe-side gradient-boosting model.
 - Scores: MAE as the main one, RMSE, the NASA score, and how often the model is too optimistic.
 - The Robustness Lab: three fault types at four sizes each.
-- Nemotron Nano suggesting extra fault settings, which our code validates and saves.
+- Nemotron-3.5-Lightning suggesting extra fault settings, which our code validates and saves.
 - A dashboard hosted on Nebius with an engine view, a model comparison and the stress-test charts.
 - A public GitHub repository with an MIT licence, a README, a short video and written feedback.
 
@@ -145,7 +145,7 @@ The rule behind every choice: use the simplest thing that answers the question, 
 
 | Choice | Why we chose it | Alternatives | Why not those now |
 | --- | --- | --- | --- |
-| NVIDIA Nemotron Nano | The hackathon requires at least one NVIDIA open model. Nano is the small, cheap one, and we only need short structured output. A third-party listing prices it at $0.06 and $0.24 per million input and output tokens, against $0.30 and $0.90 for Super and $1.00 and $3.00 for Ultra (confirm in your console) | Nemotron Super or Ultra | Cost more and add nothing for this job |
+| NVIDIA Nemotron-3.5-Lightning | The hackathon requires at least one NVIDIA open model. Nemotron-3.5-Lightning is available on the free hosted endpoint, and we only need short structured output. | Nemotron Super or Ultra | Cost more and add nothing for this job |
 | Not using Nemotron to predict | It is a language model, not built for table data, and its mistakes would sound confident | Fine-tuning it on engine data | Heavy GPU work for a worse, less testable result |
 | Not using NIM, TensorRT-LLM, NeMo Curator, NeMo Evaluator or DGX Spark | They need extra infrastructure or hardware (the evaluator is set up on Kubernetes), and our own checks do the job | The same tools | Kept as future steps for private, self-hosted use |
 | Nebius | The rules need the project to call Token Factory or run on Nebius compute. Hosting the dashboard there meets this with one account | Streamlit Community Cloud plus Token Factory calls | Works only if the app makes a live call; hosting on Nebius is the safer fit |
