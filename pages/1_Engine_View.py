@@ -228,16 +228,16 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 # ---------- Table: last 10-20 cycles ----------
-    st.markdown(
-        textwrap.dedent(f"""
-        <div class="panel">
-        <div class="panel-header">
-        <div class="panel-title">Last 20 cycles — Engine {engine_id}</div>
-        </div>
-        </div>
-        """).strip(),
-        unsafe_allow_html=True,
-    )
+st.markdown(
+    textwrap.dedent(f"""
+    <div class="panel">
+    <div class="panel-header">
+    <div class="panel-title">Last 20 cycles — Engine {engine_id}</div>
+    </div>
+    </div>
+    """).strip(),
+    unsafe_allow_html=True,
+)
 
 table_df = eng_df.tail(20).copy()
 display_cols = ["cycle", "RUL"] + models
