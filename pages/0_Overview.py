@@ -95,19 +95,19 @@ st.markdown(
 col1, col2, col3 = st.columns(3)
 with col1:
     st.page_link(
-        "1_Engine_View.py",
+        "pages/1_Engine_View.py",
         label="Engine View",
         help="Inspect RUL predictions for one validation engine, cycle by cycle.",
     )
 with col2:
     st.page_link(
-        "2_Model_Comparison.py",
+        "pages/2_Model_Comparison.py",
         label="Model Comparison",
         help="Compare Constant, Random Forest, Gradient Boosting, Safe Side and quantile models using NASA score.",
     )
 with col3:
     st.page_link(
-        "3_Stress_Lab.py",
+        "pages/3_Stress_Lab.py",
         label="Stress Lab",
         help="Stress-test predictions under noise, drift and missing-reading faults.",
     )
