@@ -68,33 +68,40 @@ def test_per_engine_metrics_missing_column_raises():
 def test_nasa_score_zero_when_perfect():
     y_true = [10, 20, 30]
     y_pred = [10, 20, 30]
-    assert ev.nasa_score(y_true, y_pred) == pytest.approx(0.0)
+    d = np.array(y_pred) - np.array(y_true)
+    assert ev.nasa_score(d) == pytest.approx(0.0)
 
 
 def test_nasa_score_sign_and_magnitude():
-    # e = truth - pred = -10 (pred too high / optimistic): exp(10/13)-1
-    opt = ev.nasa_score([0], [10])
-    assert opt == pytest.approx(np.exp(10 / 13.0) - 1.0)
-    # e = +10 (pred too low / conservative): exp(10/10)-1
-    cons = ev.nasa_score([10], [0])
-    assert cons == pytest.approx(np.exp(10 / 10.0) - 1.0)
-    # conservative penalised slightly more per unit than optimistic
-    assert cons > opt
+    # d = pred - truth = +10 (pred too HIGH / optimistic / dangerous): exp(10/10)-1 (steeper)
+    opt = ev.nasa_score(np.array([10]) - np.array([0]))
+    assert opt == pytest.approx(np.exp(10 / 10.0) - 1.0)
+    # d = -10 (pred too LOW / conservative / safe): exp(-(-10)/13)-1 = exp(10/13)-1 (less steep)
+    cons = ev.nasa_score(np.array([0]) - np.array([10]))
+    assert cons == pytest.approx(np.exp(10 / 13.0) - 1.0)
+    # over-predict (dangerous) penalised more per unit than under-predict
+    assert opt > cons
 
 
 def test_nasa_score_is_sum_of_per_row():
     y_true = [0, 10]
     y_pred = [10, 0]
-    total = ev.nasa_score(y_true, y_pred)
-    per = sum(ev.nasa_score([a], [b]) for a, b in zip(y_true, y_pred))
+    d = np.array(y_pred) - np.array(y_true)
+    total = ev.nasa_score(d)
+    per = sum(ev.nasa_score(np.array([b]) - np.array([a])) for a, b in zip(y_true, y_pred))
     assert total == pytest.approx(per)
 
 
 def test_nasa_score_per_engine():
-    df = pd.DataFrame({"unit": [1, 1, 2], "RUL": [0, 10, 0], "pred": [10, 0, 5]})
+    df = pd.DataFrame({
+        "unit": [1, 1, 1, 2, 2],
+        "cycle": [1, 2, 10, 1, 5],
+        "RUL": [0, 10, 0, 0, 7],
+        "pred": [10, 0, 5, 5, 0],
+    })
     out = ev.nasa_score_per_engine(df).set_index("engine")
     assert set(out.index) == {1, 2}
-    # engine 1: e = [-10, 10] -> exp(10/13)-1 + exp(10/10)-1
-    exp_sum = (np.exp(10 / 13.0) - 1.0) + (np.exp(10 / 10.0) - 1.0)
-    assert out.loc[1, "nasa_score_sum"] == pytest.approx(exp_sum)
-    assert out.loc[1, "n"] == 2
+    # engine 1 last cycle (cycle=10): d = 5 - 0 = +5 (over-predict): exp(5/10)-1
+    assert out.loc[1, "nasa_score"] == pytest.approx(np.exp(5 / 10.0) - 1.0)
+    # engine 2 last cycle (cycle=5): d = 0 - 7 = -7 (under-predict): exp(-(-7)/13)-1 = exp(7/13)-1
+    assert out.loc[2, "nasa_score"] == pytest.approx(np.exp(7 / 13.0) - 1.0)

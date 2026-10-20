@@ -7,6 +7,7 @@ Never trains models, never calls Nemotron.
 from __future__ import annotations
 
 import sys
+import json
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -78,6 +79,32 @@ st.markdown(
     </div>
     """,
     unsafe_allow_html=True,
+)
+
+# ---------- Locked official test result ----------
+test_json_path = Path("results/phase3_test_results.json")
+test_result = None
+if test_json_path.exists():
+    with test_json_path.open("r", encoding="utf-8") as _f:
+        test_result = json.load(_f)
+
+if test_result:
+    gb = test_result["per_model"]["gradient_boosting"]
+    st.markdown(
+        textwrap.dedent(f"""
+        <div class="panel">
+        <div class="panel-header">
+        <div class="panel-title">Locked official test result (FD001, Gradient Boosting)</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;color:#f2f4f8;line-height:1.5;">
+        NASA score at last cycle: {gb['nasa_score_at_last_cycle']:.1f} &nbsp;·&nbsp; MAE: {gb['mae']:.1f} flights
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6f7782;margin-top:4px;">
+        Trained on full training data · scored on official test engines at last cycle only
+        </div>
+        </div>
+        """).strip(),
+        unsafe_allow_html=True,
 )
 
 # ---------- Page links to the three core pages ----------

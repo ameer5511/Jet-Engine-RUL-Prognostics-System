@@ -42,6 +42,7 @@ from styles.tokens import (
     TEXT_SECONDARY,
     WARNING,
 )
+import evaluate as ev
 
 st.set_page_config(
     page_title="Jet Engine RUL Prognostics System — Model Comparison",
@@ -78,11 +79,7 @@ best_mae = float(best_row["engine_mean_mae"])
 # NASA score at last cycle per model (Saxena & Goebel PHM 2008)
 nasa_scores = {}
 for m in models:
-    y_true = preds["RUL"].to_numpy(dtype=float)
-    y_pred = preds[m].to_numpy(dtype=float)
-    d = y_pred - y_true
-    s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
-    nasa_scores[m] = float(np.sum(s))
+    nasa_scores[m] = ev.nasa_score_at_last_cycle(preds, pred_col=m)
 
 def _compact_num(v: float) -> str:
     """Format a number compactly: 696800 -> 696.8M, 1234 -> 1.2K."""
@@ -125,11 +122,7 @@ UNCERTAINTY_MODELS = ["quantile_10", "quantile_90"]
 def _nasa_for_model(col: str) -> float:
     if col not in preds.columns:
         return float("nan")
-    y_true = preds["RUL"].to_numpy(dtype=float)
-    y_pred = preds[col].to_numpy(dtype=float)
-    d = y_pred - y_true
-    s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
-    return float(np.sum(s))
+    return ev.nasa_score_at_last_cycle(preds, pred_col=col)
 
 
 def _format_row(row: pd.Series, nasa_map: dict[str, float]) -> dict[str, str]:

@@ -205,8 +205,9 @@ def get_model_metrics_summary() -> pd.DataFrame:
                 return v.get("mean")
             return v
         y_pred = df_preds[model_col].to_numpy(dtype=float)
-        err = y_true - y_pred  # truth - pred for NASA score
-        s = np.where(err < 0, np.exp(-err / 13.0) - 1.0, np.exp(err / 10.0) - 1.0)
+        # NASA score at last cycle per engine (d = pred − truth)
+        d = y_pred - y_true
+        s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
         nasa = float(np.sum(s))
         rows.append(
             {
