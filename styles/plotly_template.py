@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import plotly.graph_objects as go
 
-from tokens import (
+from styles.tokens import (
     ACCENT,
     BORDER_HAIRLINE,
     BG_PAGE,
