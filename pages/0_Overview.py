@@ -12,7 +12,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
-from pathlib import Path
 
 from app import (
     render_footer,
@@ -93,27 +92,22 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-_ROOT = Path(__file__).resolve().parent.parent
-
 col1, col2, col3 = st.columns(3)
 with col1:
-    eng_page = st.Page(str(_ROOT / "pages" / "1_Engine_View.py"), title="Engine View")
     st.page_link(
-        eng_page,
+        "1_Engine_View.py",
         label="Engine View",
         help="Inspect RUL predictions for one validation engine, cycle by cycle.",
     )
 with col2:
-    comp_page = st.Page(str(_ROOT / "pages" / "2_Model_Comparison.py"), title="Model Comparison")
     st.page_link(
-        comp_page,
+        "2_Model_Comparison.py",
         label="Model Comparison",
         help="Compare Constant, Random Forest, Gradient Boosting, Safe Side and quantile models using NASA score.",
     )
 with col3:
-    stress_page = st.Page(str(_ROOT / "pages" / "3_Stress_Lab.py"), title="Stress Lab")
     st.page_link(
-        stress_page,
+        "3_Stress_Lab.py",
         label="Stress Lab",
         help="Stress-test predictions under noise, drift and missing-reading faults.",
     )

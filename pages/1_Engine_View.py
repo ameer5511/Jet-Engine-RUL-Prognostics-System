@@ -106,31 +106,31 @@ true_rul = float(r["RUL"])
 preds_at_cycle = {m: float(r[m]) for m in models if m in r.index and pd.notna(r[m])}
 
 # Header chips: predicted RUL at cycle
-    gb_pred = preds_at_cycle.get("gradient_boosting", preds_at_cycle.get(models[0], 0))
-    health = ("Critical" if gb_pred < 30 else "Warning" if gb_pred < 60 else "Healthy")
-    health_color = {"Critical": "#f26464", "Warning": "#f2a93b", "Healthy": "#6fd08a"}[health]
+gb_pred = preds_at_cycle.get("gradient_boosting", preds_at_cycle.get(models[0], 0))
+health = ("Critical" if gb_pred < 30 else "Warning" if gb_pred < 60 else "Healthy")
+health_color = {"Critical": "#f26464", "Warning": "#f2a93b", "Healthy": "#6fd08a"}[health]
 
-    st.markdown(
-        textwrap.dedent(f"""
-        <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
-        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:600;
-        text-transform:uppercase;letter-spacing:0.08em;color:#a2a9b0;">
-        ENGINE {engine_id}
-        </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;color:#f2f4f8;">
-        {gb_pred:.0f} flights left
-        </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6f7782;">
-        True: {true_rul:.0f} &nbsp;·&nbsp; Δ: {(gb_pred-true_rul):+.0f}
-        </div>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
-        color:{health_color};border:1px solid {health_color};padding:2px 8px;border-radius:2px;">
-        {health}
-        </span>
-        </div>
-        """).strip(),
-        unsafe_allow_html=True,
-    )
+st.markdown(
+    textwrap.dedent(f"""
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
+    <div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.08em;color:#a2a9b0;">
+    ENGINE {engine_id}
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;color:#f2f4f8;">
+    {gb_pred:.0f} flights left
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6f7782;">
+    True: {true_rul:.0f} &nbsp;·&nbsp; Δ: {(gb_pred-true_rul):+.0f}
+    </div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
+    color:{health_color};border:1px solid {health_color};padding:2px 8px;border-radius:2px;">
+    {health}
+    </span>
+    </div>
+    """).strip(),
+    unsafe_allow_html=True,
+)
 
 # ---------- KPI band ----------
 per_engine = {}

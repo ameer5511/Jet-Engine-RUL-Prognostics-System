@@ -110,72 +110,74 @@ kpi_items = [
 ]
 render_kpi_band(kpi_items)
 
-# ---------- Model scores table ----------
 # ---------- Model scores tables ----------
-    POINT_PREDICTORS = ["constant", "random_forest", "gradient_boosting", "safe_side"]
-    UNCERTAINTY_MODELS = ["quantile_10", "quantile_90"]
+POINT_PREDICTORS = ["constant", "random_forest", "gradient_boosting", "safe_side"]
+UNCERTAINTY_MODELS = ["quantile_10", "quantile_90"]
 
-    def _nasa_for_model(col: str) -> float:
-        if col not in preds.columns:
-            return float("nan")
-        y_true = preds["RUL"].to_numpy(dtype=float)
-        y_pred = preds[col].to_numpy(dtype=float)
-        err = y_true - y_pred
-        s = np.where(err < 0, np.exp(-err / 13.0) - 1.0, np.exp(err / 10.0) - 1.0)
-        return float(np.sum(s))
 
-    def _format_row(row: pd.Series, nasa_map: dict[str, float]) -> dict[str, str]:
-        return {
-            "Model": row["model"],
-            "Engine-mean MAE": f"{row['engine_mean_mae']:.1f}" if pd.notna(row["engine_mean_mae"]) else "—",
-            "Engine-mean RMSE": f"{row['engine_mean_rmse']:.1f}" if pd.notna(row["engine_mean_rmse"]) else "—",
-            "Engine-mean bias": f"{row['engine_mean_bias']:+.1f}" if pd.notna(row["engine_mean_bias"]) else "—",
-            "Worst MAE": f"{row['engine_worst_mae']:.1f}" if pd.notna(row["engine_worst_mae"]) else "—",
-            "Too-opt @10": f"{row['too_opt_engine_margin10']*100:.0f}%" if pd.notna(row["too_opt_engine_margin10"]) else "—",
-            "NASA score": _compact_num(nasa_map.get(row["model"].replace(" ", "_").lower(), 0)),
-        }
+def _nasa_for_model(col: str) -> float:
+    if col not in preds.columns:
+        return float("nan")
+    y_true = preds["RUL"].to_numpy(dtype=float)
+    y_pred = preds[col].to_numpy(dtype=float)
+    err = y_true - y_pred
+    s = np.where(err < 0, np.exp(-err / 13.0) - 1.0, np.exp(err / 10.0) - 1.0)
+    return float(np.sum(s))
 
-    nasa_map = {m.replace("_", " ").title(): _nasa_for_model(m) for m in models}
 
-    st.markdown(
-        textwrap.dedent(f"""
-        <div class="panel">
-        <div class="panel-header">
-        <div class="panel-title">Model scores — point predictors, val engines (uncapped RUL)</div>
-        </div>
-        </div>
-        """).strip(),
-        unsafe_allow_html=True,
-    )
+def _format_row(row: pd.Series, nasa_map: dict[str, float]) -> dict[str, str]:
+    return {
+        "Model": row["model"],
+        "Engine-mean MAE": f"{row['engine_mean_mae']:.1f}" if pd.notna(row["engine_mean_mae"]) else "—",
+        "Engine-mean RMSE": f"{row['engine_mean_rmse']:.1f}" if pd.notna(row["engine_mean_rmse"]) else "—",
+        "Engine-mean bias": f"{row['engine_mean_bias']:+.1f}" if pd.notna(row["engine_mean_bias"]) else "—",
+        "Worst MAE": f"{row['engine_worst_mae']:.1f}" if pd.notna(row["engine_worst_mae"]) else "—",
+        "Too-opt @10": f"{row['too_opt_engine_margin10']*100:.0f}%" if pd.notna(row["too_opt_engine_margin10"]) else "—",
+        "NASA score": _compact_num(nasa_map.get(row["model"].replace(" ", "_").lower(), 0)),
+    }
 
-    point_df = summary_df[summary_df["model"].isin([m.replace("_", " ").title() for m in POINT_PREDICTORS])].copy()
-    point_rows = [_format_row(r, nasa_map) for _, r in point_df.iterrows()]
-    st.dataframe(
-        pd.DataFrame(point_rows),
-        use_container_width=True,
-        hide_index=True,
-        column_config={c: st.column_config.NumberColumn(c) if c not in ("Model",) else st.column_config.TextColumn(c) for c in point_rows[0]},
-    )
 
-    st.markdown(
-        textwrap.dedent(f"""
-        <div class="panel">
-        <div class="panel-header">
-        <div class="panel-title">Uncertainty models — quantile predictions</div>
-        </div>
-        </div>
-        """).strip(),
-        unsafe_allow_html=True,
-    )
+nasa_map = {m.replace("_", " ").title(): _nasa_for_model(m) for m in models}
 
-    unc_df = summary_df[summary_df["model"].isin([m.replace("_", " ").title() for m in UNCERTAINTY_MODELS])].copy()
-    unc_rows = [_format_row(r, nasa_map) for _, r in unc_df.iterrows()]
-    st.dataframe(
-        pd.DataFrame(unc_rows),
-        use_container_width=True,
-        hide_index=True,
-        column_config={c: st.column_config.NumberColumn(c) if c not in ("Model",) else st.column_config.TextColumn(c) for c in unc_rows[0]},
-    )
+st.markdown(
+    textwrap.dedent(f"""
+    <div class="panel">
+    <div class="panel-header">
+    <div class="panel-title">Model scores — point predictors, val engines (uncapped RUL)</div>
+    </div>
+    </div>
+    """).strip(),
+    unsafe_allow_html=True,
+)
+
+point_df = summary_df[summary_df["model"].isin([m.replace("_", " ").title() for m in POINT_PREDICTORS])].copy()
+point_rows = [_format_row(r, nasa_map) for _, r in point_df.iterrows()]
+st.dataframe(
+    pd.DataFrame(point_rows),
+    use_container_width=True,
+    hide_index=True,
+    column_config={c: st.column_config.NumberColumn(c) if c not in ("Model",) else st.column_config.TextColumn(c) for c in point_rows[0]},
+)
+
+st.markdown(
+    textwrap.dedent(f"""
+    <div class="panel">
+    <div class="panel-header">
+    <div class="panel-title">Uncertainty models — quantile predictions</div>
+    </div>
+    </div>
+    """).strip(),
+    unsafe_allow_html=True,
+)
+
+unc_df = summary_df[summary_df["model"].isin([m.replace("_", " ").title() for m in UNCERTAINTY_MODELS])].copy()
+unc_rows = [_format_row(r, nasa_map) for _, r in unc_df.iterrows()]
+st.dataframe(
+    pd.DataFrame(unc_rows),
+    use_container_width=True,
+    hide_index=True,
+    column_config={c: st.column_config.NumberColumn(c) if c not in ("Model",) else st.column_config.TextColumn(c) for c in unc_rows[0]},
+)
 
 # ---------- Two columns: too-optimistic panel + coverage card ----------
 col1, col2 = st.columns([2, 1])
