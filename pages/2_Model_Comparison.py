@@ -75,6 +75,8 @@ metrics = load_metrics()
 best_row = summary_df.loc[summary_df["engine_mean_mae"].idxmin()]
 best_model = best_row["model"]
 best_mae = float(best_row["engine_mean_mae"])
+best_too_opt_row = summary_df.loc[summary_df["too_opt_engine_margin10"].idxmin()]
+best_too_opt = float(best_too_opt_row["too_opt_engine_margin10"])
 
 # NASA score at last cycle per model (Saxena & Goebel PHM 2008)
 nasa_scores = {}

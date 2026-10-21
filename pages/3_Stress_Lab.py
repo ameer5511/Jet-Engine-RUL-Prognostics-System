@@ -92,9 +92,12 @@ else:
 # ---------- KPI band ----------
 # Worst fault: max GB degradation across all scenarios from clean baseline
 # (matches heatmap which uses GB only)
-clean_gb_mae = 0.0
+clean_mae = {}
 if "clean" in aggregate:
-    clean_gb_mae = float(aggregate["clean"]["gradient_boosting"]["engine_mean_mae"]["mean"])
+    for model_name, vals in aggregate["clean"].items():
+        clean_mae[model_name] = float(vals["engine_mean_mae"]["mean"])
+
+clean_gb_mae = clean_mae.get("gradient_boosting", 0.0)
 
 worst_increase = 0.0
 worst_scenario = "—"
@@ -204,7 +207,7 @@ for sname, svals in aggregate.items():
     for model in selected_models:
         if model not in svals:
             continue
-        inc = float(svals[model]["engine_mean_mae"]["mean"]) - clean_mae.get(model, 0)
+        inc = float(svals[model]["engine_mean_mae"]["mean"]) - clean_mae[model]
         chart_data.append(
             {
                 "scenario": sname,
