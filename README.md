@@ -331,8 +331,16 @@ Raw training data (`data/raw/`) and your `.env` are git-ignored.
 
 ## 📚 References
 
-- A. Saxena, K. Goebel et al., *Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation*, PHM 2008.
-- NASA Prognostics Center of Excellence, **C-MAPSS** dataset (FD001).
+- A. Saxena, K. Goebel, D. Simon, and N. Eklund, *Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation*, **PHM 2008** — the C-MAPSS paper and origin of the asymmetric scoring function. ([DOI: 10.1109/PHM.2008.4711414](https://doi.org/10.1109/PHM.2008.4711414))
+- F. O. Heimes, *Recurrent Neural Networks for Remaining Useful Life Estimation*, **PHM 2008** — the classic RUL-cap (`censored` target) convention. ([DOI: 10.1109/PHM.2008.4711421](https://doi.org/10.1109/PHM.2008.4711421))
+- E. Ramasso and A. Saxena, *Performance Benchmarking and Regularization of prognostics methods*, **IJPHM 2014** — the standard review/benchmark of C-MAPSS methods, incl. "RUL-capping". ([DOI: 10.5014/ijphm.2014.0060](https://doi.org/10.5014/ijphm.2014.0060))
+- A. Saxena and K. Goebel, *C-MAPSS Data Set*, NASA Prognostics Center of Excellence (PCoE) — the official dataset source. ([NASA PCoE Data Repository](https://www.nasa.gov/intelligent-systems-division))
+- D. A. Beard and H. W. T. van den Broek — *Remaining Useful Life Estimation in prognostics* survey literature, see the Ramasso & Saxena review for a full bibliography.
+- **NASA C-MAPSS Reference**: Turbofan Engine Degradation Simulation Data Set, NASA Ames Prognostics Data Repository.
+- **NVIDIA Nemotron-3.5-Lightning** model card and hosted endpoint documentation at [build.nvidia.com](https://build.nvidia.com).
+- **Streamlit** documentation for `st.navigation` multipage apps and Community Cloud deployment ([docs.streamlit.io](https://docs.streamlit.io)).
+- **scikit-learn** quantile regression via `GradientBoostingRegressor(loss="quantile")` ([scikit-learn docs](https://scikit-learn.org/stable/modules/ensemble.html)).
+- **Plotly** Python graphing library documentation ([plotly.com/python](https://plotly.com/python/)).
 
 ## 📄 License
 
