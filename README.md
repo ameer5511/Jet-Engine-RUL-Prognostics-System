@@ -4,7 +4,7 @@
 </p>
 
 <h1 align="center">Jet Engine RUL Prognostics System</h1>
-
+<a href="https://jet-engine-rul-prognostics-system-7yubtws6fsqkhtjbsphe3g.streamlit.app/"><img src="https://img.shields.io/badge/LIVE_DEMO-Open_Dashboard-FF4B4B?style=for-the-badge" alt="Live Demo"></a>
 <p align="center">
   <b>Predict how many flights an engine has left, then stress-test that prediction when the sensors go bad.</b>
 </p>
@@ -56,6 +56,7 @@
 Maintenance too early wastes money. Maintenance too late risks failure. The dangerous error is predicting **too many flights remaining**.
 
 This project predicts the **Remaining Useful Life (RUL)** of a simulated jet engine, then asks a harder question: **what happens to that prediction when sensors fail?** It measures both the *robustness* of RUL models to sensor faults and the *cost of safety*, the extra early maintenance a cautious model asks for.
+
 
 ### What's inside
 
