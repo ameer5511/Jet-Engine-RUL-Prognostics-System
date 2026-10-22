@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -29,8 +28,16 @@ def std():
     return {"s1": 2.0, "s2": 3.0, "s3": 4.0}
 
 
+@pytest.fixture
+def isolated_cache(tmp_path, monkeypatch):
+    """Redirect scenario cache I/O to a temp file so tests never touch results/."""
+    p = tmp_path / "nemotron_scenarios.json"
+    monkeypatch.setattr(scenarios, "_cache_path", lambda: p)
+    return p
+
+
 def _clear_cache():
-    p = Path("results/nemotron_scenarios.json")
+    p = scenarios._cache_path()
     if p.exists():
         p.unlink()
 
@@ -47,7 +54,7 @@ def _scenario_names(scenarios_list):
     return {s["name"] for s in scenarios_list}
 
 
-def test_offline_returns_grid_only(monkeypatch, sensors, cfg, std):
+def test_offline_returns_grid_only(monkeypatch, sensors, cfg, std, isolated_cache):
     _clear_cache()
     called = {"n": 0}
 
@@ -80,7 +87,7 @@ def test_grid_scenarios_apply_to_all_sensors(sensors, cfg, std):
     assert {st.sensor for st in noise["settings"]} == set(sensors)
 
 
-def test_nemotron_valid_proposals_added(monkeypatch, sensors, cfg, std):
+def test_nemotron_valid_proposals_added(monkeypatch, sensors, cfg, std, isolated_cache):
     _clear_cache()
     monkeypatch.setenv("NVIDIA_API_KEY", "test-key-12345")
     _monkeypatch_fetch(
@@ -104,7 +111,7 @@ def test_nemotron_valid_proposals_added(monkeypatch, sensors, cfg, std):
     monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
 
 
-def test_nemotron_invalid_proposals_rejected(monkeypatch, sensors, cfg, std):
+def test_nemotron_invalid_proposals_rejected(monkeypatch, sensors, cfg, std, isolated_cache):
     _clear_cache()
     monkeypatch.setenv("NVIDIA_API_KEY", "test-key-12345")
     _monkeypatch_fetch(
@@ -124,7 +131,7 @@ def test_nemotron_invalid_proposals_rejected(monkeypatch, sensors, cfg, std):
     monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
 
 
-def test_nemotron_duplicate_proposals_deduped(monkeypatch, sensors, cfg, std):
+def test_nemotron_duplicate_proposals_deduped(monkeypatch, sensors, cfg, std, isolated_cache):
     _clear_cache()
     monkeypatch.setenv("NVIDIA_API_KEY", "test-key-12345")
     _monkeypatch_fetch(
@@ -150,7 +157,7 @@ def test_json_from_text_tolerates_fences():
     assert scenarios._json_from_text("{\"a\": 1}") == []
 
 
-def test_cache_skips_http(monkeypatch, sensors, cfg, std):
+def test_cache_skips_http(monkeypatch, sensors, cfg, std, isolated_cache):
     _clear_cache()
     cache = {
         "schema_version": 1,
@@ -159,8 +166,7 @@ def test_cache_skips_http(monkeypatch, sensors, cfg, std):
             {"sensor": "s1", "kind": "noise", "magnitude": 0.9, "seed": 7},
         ],
     }
-    Path("results").mkdir(parents=True, exist_ok=True)
-    with Path("results/nemotron_scenarios.json").open("w", encoding="utf-8") as f:
+    with scenarios._cache_path().open("w", encoding="utf-8") as f:
         json.dump(cache, f)
     try:
         monkeypatch.setenv("NVIDIA_API_KEY", "test-key-12345")
@@ -183,7 +189,7 @@ def test_cache_skips_http(monkeypatch, sensors, cfg, std):
         monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
 
 
-def test_no_api_key_means_grid_only(monkeypatch, sensors, cfg, std):
+def test_no_api_key_means_grid_only(monkeypatch, sensors, cfg, std, isolated_cache):
     _clear_cache()
     monkeypatch.setenv("NVIDIA_API_KEY", "")
     called = {"n": 0}
