@@ -17,23 +17,29 @@
   <a href="#-quickstart"><img src="https://img.shields.io/badge/⚡_QUICKSTART-Run_Locally-2ea44f?style=for-the-badge" alt="Quickstart"></a>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/tests-94_passing-brightgreen?style=flat-square&logo=pytest&logoColor=white" alt="Tests">
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/data-NASA_C--MAPSS_FD001-0B3D91?style=flat-square&logo=nasa&logoColor=white" alt="NASA C-MAPSS">
-  <img src="https://img.shields.io/badge/deployed_on-Streamlit_Cloud-FF4B4B?style=flat-square&logo=streamlit&logoColor=white" alt="Streamlit Cloud">
-</p>
 
 <p align="center">
-  <a href="#-overview">Overview</a> •
-  <a href="#-demo">Demo</a> •
-  <a href="#-key-results">Results</a> •
-  <a href="#-architecture">Architecture</a> •
-  <a href="#-quickstart">Quickstart</a> •
-  <a href="#-metrics">Metrics</a> •
-  <a href="#-repository-layout">Layout</a>
+  <img src="https://cdn.simpleicons.org/python/3776AB" height="36" alt="Python" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/pandas/150458" height="36" alt="pandas" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/numpy/013243" height="36" alt="NumPy" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/scikitlearn/F7931E" height="36" alt="scikit-learn" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/nvidia/76B900" height="36" alt="NVIDIA" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/streamlit/FF4B4B" height="36" alt="Streamlit" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/plotly/3F4F75" height="36" alt="Plotly" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/pytest/0A9EDC" height="36" alt="pytest" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/yaml/CB171E" height="36" alt="YAML" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/github/FFFFFF" height="36" alt="GitHub" />
 </p>
+
 
 > [!WARNING]
 > **Disclaimer.** This project uses NASA's C-MAPSS *simulation* data, not real airline or engine data. It is a research and portfolio project and **must not** be used for real maintenance or airworthiness decisions.
