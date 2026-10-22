@@ -65,7 +65,9 @@ This project predicts the **Remaining Useful Life (RUL)** of a simulated jet eng
 
 ## 🎬 Demo
 
-
+<p align="center">
+  <img src="docs/demo.gif" alt="Dashboard demo" width="90%">
+</p>
 
 <table>
   <tr>
