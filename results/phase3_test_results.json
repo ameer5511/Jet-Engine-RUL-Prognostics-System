@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "dataset": "FD001",
+    "n_train_engines": 100,
+    "n_test_engines": 100,
+    "window": 10,
+    "n_features": 45,
+    "split_seed": 0,
+    "dropped_sensors": [
+      "s1",
+      "s5",
+      "s10",
+      "s16",
+      "s18",
+      "s19"
+    ],
+    "used_sensors": [
+      "s2",
+      "s3",
+      "s4",
+      "s6",
+      "s7",
+      "s8",
+      "s9",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s17",
+      "s20",
+      "s21"
+    ],
+    "note": "Locked official test set run. Gradient Boosting trained on full training data, scored on test engines at last cycle only."
+  },
+  "per_model": {
+    "gradient_boosting": {
+      "nasa_score_at_last_cycle": 63259.15906341508,
+      "mae": 23.677658703577162
+    }
+  },
+  "nasa_scores": {
+    "gradient_boosting": 63259.15906341508
+  }
+}

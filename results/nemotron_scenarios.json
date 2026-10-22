@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "base_url": "https://integrate.api.nvidia.com/v1",
+  "settings": [
+    {
+      "sensor": "s2",
+      "kind": "noise",
+      "magnitude": 2.0,
+      "seed": 0
+    },
+    {
+      "sensor": "s3",
+      "kind": "drift",
+      "magnitude": 4.0,
+      "seed": 1
+    },
+    {
+      "sensor": "s4",
+      "kind": "missing",
+      "magnitude": 0.5,
+      "seed": 2
+    },
+    {
+      "sensor": "s6",
+      "kind": "noise",
+      "magnitude": 1.0,
+      "seed": 3
+    },
+    {
+      "sensor": "s7",
+      "kind": "drift",
+      "magnitude": 6.0,
+      "seed": 4
+    },
+    {
+      "sensor": "s8",
+      "kind": "missing",
+      "magnitude": 0.3,
+      "seed": 0
+    }
+  ]
+}

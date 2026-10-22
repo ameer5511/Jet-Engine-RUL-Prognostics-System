@@ -97,16 +97,6 @@ ss_mae = float(np.mean(np.abs(preds["safe_side"] - preds["RUL"])))
 gb_mae = float(np.mean(np.abs(preds["gradient_boosting"] - preds["RUL"])))
 cost_of_safety = ss_mae - gb_mae
 
-# NASA score per model at last cycle (for table)
-def _nasa_for_model(col: str) -> float:
-    if col not in preds.columns:
-        return float("nan")
-    y_true = preds["RUL"].to_numpy(dtype=float)
-    y_pred = preds[col].to_numpy(dtype=float)
-    d = y_pred - y_true
-    s = np.where(d < 0, np.exp(-d / 13.0) - 1.0, np.exp(d / 10.0) - 1.0)
-    return float(np.sum(s))
-
 kpi_items = [
     {"label": "Best model", "value": best_model, "subtext": "by engine-mean MAE"},
     {"label": "MAE", "value": f"{best_mae:.1f}", "subtext": f"{best_model}"},

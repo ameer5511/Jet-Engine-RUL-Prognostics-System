@@ -28,6 +28,8 @@ results/*
 !results/phase2_val_predictions.csv
 !results/phase4_stress.json
 !results/phase4_stress.csv
+!results/nemotron_scenarios.json
+!results/phase3_test_results.json
 *.joblib
 *.pkl
 
