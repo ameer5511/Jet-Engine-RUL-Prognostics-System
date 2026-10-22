@@ -409,7 +409,7 @@ components/
   empty_state.py
   heatmap.py
   hero_banner.py
-pages/
+views/
   1_Engine_View.py
   2_Model_Comparison.py
   3_Stress_Lab.py

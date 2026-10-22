@@ -533,12 +533,12 @@ def render_kpi_band(items: list[dict[str, str]]) -> None:
 pg = st.navigation(
     {
         "Overview": [
-            st.Page("pages/0_Overview.py", title="Overview", default=True),
+            st.Page("views/0_Overview.py", title="Overview", default=True),
         ],
         "Explore": [
-            st.Page("pages/1_Engine_View.py", title="Engine View"),
-            st.Page("pages/2_Model_Comparison.py", title="Model Comparison"),
-            st.Page("pages/3_Stress_Lab.py", title="Stress Lab"),
+            st.Page("views/1_Engine_View.py", title="Engine View"),
+            st.Page("views/2_Model_Comparison.py", title="Model Comparison"),
+            st.Page("views/3_Stress_Lab.py", title="Stress Lab"),
         ],
     }
 )

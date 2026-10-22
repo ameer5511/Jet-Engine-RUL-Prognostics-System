@@ -363,7 +363,7 @@ if not heatmap_df.empty:
                 [0.5, "#12151a"],    # dark panel grey for neutral
                 [1.0, "#fa4d56"],    # red for high ΔMAE (degradation / worse)
             ],
-            colorbar=dict(title="Δ MAE", titleside="right", tickfont=dict(size=9)),
+            colorbar=dict(title=dict(text="Δ MAE", side="right"), tickfont=dict(size=9)),
             hovertemplate="Kind %{y}<br>Magnitude %{x}<br>ΔMAE %{z:+.1f}<extra></extra>",
             showscale=True,
         )
