@@ -6,7 +6,7 @@ are rejected. Validated suggestions form a UNION with the fixed grid, tagged
 with provenance (grid vs nemotron). ``--offline`` runs grid-only.
 
 The client is provider-agnostic: any OpenAI-compatible endpoint works
-(NVIDIA build.nvidia.com today, Nebius Token Factory later) via env vars:
+(NVIDIA build.nvidia.com) via env vars:
 
     NVIDIA_API_KEY      required
     NVIDIA_BASE_URL     defaults to https://integrate.api.nvidia.com/v1

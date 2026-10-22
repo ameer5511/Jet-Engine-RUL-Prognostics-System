@@ -15,11 +15,11 @@ A RUL (Remaining Useful Life) pipeline on NASA C-MAPSS **FD001** with three part
 
 1. **Predictor.** A constant baseline, Random Forest, gradient boosting (main), and a "safe-side" quantile gradient-boosting model that leans cautious, plus P10/P90 range models.
 2. **Robustness Lab.** Damage held-out sensor data three ways (noise, drift, missing readings) at four magnitudes each, and measure how predictions degrade.
-3. **Dashboard.** A Streamlit + Plotly app hosted on Nebius that reads saved artifacts only (no training at request time).
+3. **Dashboard.** A Streamlit + Plotly app hosted on Streamlit Community Cloud that reads saved artifacts only (no training at request time).
 
 **Headline question:** When sensors go bad, does the safe-side model stay safe, and how many flights of early maintenance does that safety cost?
 
-**NVIDIA dependency:** Nemotron-3.5-Lightning (via Nebius Token Factory, model `nvidia/nemotron-3.5-lightning-30b-a3b`) proposes candidate fault settings only. Our code validates every suggestion and produces every number.
+**NVIDIA dependency:** Nemotron-3.5-Lightning (via the free hosted endpoint at build.nvidia.com, model `nvidia/nemotron-3.5-lightning-30b-a3b`) proposes candidate fault settings only. Our code validates every suggestion and produces every number.
 
 **Out of scope for the hackathon:** FD002–FD004, N-CMAPSS, neural nets (GRU/LSTM), custom NASA-score loss, anomaly alarms, drift monitoring, chatbot, own API, database, accounts, 3D plots, real hardware.
 
@@ -34,7 +34,7 @@ A RUL (Remaining Useful Life) pipeline on NASA C-MAPSS **FD001** with three part
 - Metrics: MAE (main), RMSE, NASA score, too-optimistic rate.
 - Robustness Lab: 3 fault types × 4 magnitudes, fixed seeds.
 - Nemotron-3.5-Lightning proposing extra fault settings, validated and saved.
-- Streamlit dashboard on Nebius: engine view, model comparison, stress-test charts.
+- Streamlit dashboard: engine view, model comparison, stress-test charts.
 - Public GitHub repo, MIT licence, README, <3 min video, written feedback.
 
 **Cut order if time runs short**
@@ -156,8 +156,9 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 | `faults.py` | Noise, drift, missing readings on one sensor |
 | `scenarios.py` | Ask Nemotron, validate, save |
 | `stress_test.py` | Run every model on every damaged version, save scores |
+| `test_run.py` | Final locked run on the official FD001 test set (last-cycle scoring) |
 | `evaluate.py` | Compute the scores |
-| `dashboard.py` | Streamlit pages |
+| `app.py` + `views/` | Streamlit app shell and the four dashboard pages |
 | `tests/` | Small test per file |
 
 **Additions**
@@ -169,7 +170,7 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 
 **Dependencies (planned):** pandas, numpy, scikit-learn, streamlit, plotly, requests (Nemotron), pyyaml, python-dotenv. Confirm sklearn quantile loss support before relying on it (Open Q-B3).
 
-**Deployment:** Streamlit on Nebius. Decide **DevPod vs Serverless Endpoint** (Open Q-B2); deploy a hello-world in Week 1.
+**Deployment:** Streamlit Community Cloud (push-triggered redeploy of the public GitHub repo). Done — see README Quickstart.
 
 ---
 
@@ -183,14 +184,14 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 - **A5 (open):** guardrail that the official test set is untouched until the final run (separate script/flag).
 - **A6 (resolved):** primary metrics per engine; per-flight secondary.
 
-### B. External facts to confirm
-- B1: FD001 column names, engine counts, and RUL convention vs NASA readme.
-- B2: Nebius hosting choice (DevPod vs Serverless Endpoint) and limits.
-- B3: sklearn quantile regression API/loss details.
-- B4: Exact NASA score formula (and whether published NASA-aware losses exist).
-- B5: Token Factory: exact Nemotron model name, endpoint, auth, request/response format.
-- B6: Token pricing and available credits (design lists $0.06/$0.24 per M tokens for Nano — *confirm in console*).
-- B7: Country eligibility (India not explicitly listed — read full rules).
+### B. External facts — all confirmed
+- **B1** RESOLVED — FD001 has 100 train / 100 test engines; whitespace-separated, 26 columns (unit, cycle, 3 settings, 21 sensors); RUL convention verified against the dataset readme.
+- **B3** RESOLVED — scikit-learn quantile regression (`loss="quantile"`, α=0.30/0.10/0.90) verified in use.
+- **B4** RESOLVED — NASA score per Saxena & Goebel (PHM 2008): with `d = pred − truth`, d < 0 → exp(−d/13)−1, d ≥ 0 → exp(d/10)−1; computed at each engine's last cycle.
+- **B5** RESOLVED — Nemotron model `nvidia/nemotron-3.5-lightning-30b-a3b` at `https://integrate.api.nvidia.com/v1` (build.nvidia.com), OpenAI-compatible chat completions, bearer-key auth; live call verified.
+- ~~B2~~ N/A — project does not use Nebius; the dashboard is hosted on Streamlit Community Cloud.
+- ~~B6~~ N/A — NVIDIA's free hosted endpoint does not bill per run; `NEMOTRON_MAX_CALLS` caps calls; validated replies are cached to `results/`.
+- ~~B7~~ N/A — Nebius eligibility is moot; Nebius is not used.
 
 ---
 
@@ -209,8 +210,8 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 ### Phase 0 — Setup & Spec
 - Git repo, MIT, `.gitignore` (data/, .env, results/, caches).
 - Finalize this spec; second-opinion review.
-- Confirm Nebius/Token Factory details and country eligibility.
-- **Accept:** repo public + MIT visible; spec complete; Nebius model/endpoint confirmed; eligibility checked.
+- Confirm the NVIDIA (build.nvidia.com) endpoint and Nemotron catalog entry.
+- **Accept:** repo public + MIT visible; spec complete; NVIDIA model/endpoint confirmed.
 
 ### Phase 1 — Data & Features
 - Load FD001; build RUL + cap rule; seeded engine split; past-only features; constant-sensor drop.
@@ -236,20 +237,19 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 
 ### Phase 5 — Dashboard & Demo
 - 3 pages, read-only, fault provenance, disclaimer.
-- **Accept:** reads artifacts only; shows engine view/comparison/stress tests; disclaimer present; local run OK; Nebius deploy tested.
+- **Accept:** reads artifacts only; shows engine view/comparison/stress tests; disclaimer present; local run OK; Streamlit Community Cloud deploy tested.
 
 ### Phase 6 — Polish, Tests, Submission
 - Per-file tests; README; <3 min video; feedback; final run; tag.
-- **Accept:** tests pass; README covers setup, Nemotron usage, Token Factory, Nebius, disclaimer; video <3 min; clean tagged commit.
+- **Accept:** tests pass; README covers setup, Nemotron usage, tech stack, disclaimer; video <3 min; clean tagged commit.
 
 ---
 
 ## 12. Open questions
 
-- **A5** official test-set guardrail.
-- **B1** FD001 fields/counts; **B4** NASA score formula; **B5** Token Factory model/endpoint.
-- B2 Nebius hosting; B3 sklearn quantile API; B6 credits/pricing; B7 country eligibility.
-- Video outline and demo flow not yet defined.
+- **A5** RESOLVED — official test set reached only in the final locked run (`test_run.py`, last-cycle scoring, results committed to `results/phase3_test_results.json`).
+- **B…** all RESOLVED (above).
+- Video outline: Overview → Engine View → Model Comparison (NASA score) → Stress Lab (grid + Nemotron provenance, cost of safety) → disclaimer.
 - Whether Nemotron's union-with-grid dependency is strong enough for the judges' "depends on" wording.
 
 ---
@@ -257,3 +257,5 @@ Offline-first: heavy work writes CSV/JSON; dashboard only reads.
 ## 13. Change log
 - 17 Oct 2026 — Initial spec from design doc + review.
 - 17 Oct 2026 — Copied to repo root; resolved A1–A4, A6; added margin sensitivity; pinned spread/aggregation choices.
+- 21 Oct 2026 — Correctness pass: NASA score at last cycle (d = pred − truth, overestimate branch steeper), cost of safety unified (pooled safe-side MAE − GB MAE), heatmap colour flip, quantile-crossing sort, locked official test run committed.
+- 23 Oct 2026 — Deployment on Streamlit Community Cloud (`pages/` renamed to `views/` to avoid legacy multipage conflict); Plotly 6 compatibility; README expanded; all Nebius references removed (project uses NVIDIA build.nvidia.com + Streamlit Community Cloud).

@@ -71,4 +71,4 @@ outputs:
   schema_version: 1
 
 dashboard:
-  host: nebius            # DevPod vs Serverless Endpoint: Open Q-B2
+  host: streamlit_community_cloud

@@ -12,9 +12,9 @@ AeroGuard predicts how many more flights a simulated jet engine can do before it
 
 1. **A predictor.** A normal model, plus a "safe-side" model trained to lean cautious.
 2. **A stress test (the Robustness Lab).** We damage the sensor data in three ways (random noise, a slow drift on one sensor, missing readings) and measure how much the predictions get worse.
-3. **A dashboard hosted on Nebius** that shows the predictions and the stress-test results.
+3. **A dashboard hosted on Streamlit Community Cloud** that shows the predictions and the stress-test results.
 
-Nemotron, NVIDIA's open model, runs through Nebius Token Factory and has one small job: it suggests fault settings to test. Our own code checks every suggestion and produces every number.
+Nemotron, NVIDIA's open model, runs through NVIDIA's free hosted endpoint (build.nvidia.com) and has one small job: it suggests fault settings to test. Our own code checks every suggestion and produces every number.
 
 **The headline question.** When sensors go bad, does the safe-side model stay safe, and how many flights of early maintenance does that safety cost?
 
@@ -30,7 +30,7 @@ Nemotron, NVIDIA's open model, runs through Nebius Token Factory and has one sma
 - Scores: MAE as the main one, RMSE, the NASA score, and how often the model is too optimistic.
 - The Robustness Lab: three fault types at four sizes each.
 - Nemotron-3.5-Lightning suggesting extra fault settings, which our code validates and saves.
-- A dashboard hosted on Nebius with an engine view, a model comparison and the stress-test charts.
+- A dashboard hosted on Streamlit Community Cloud with an engine view, a model comparison and the stress-test charts.
 - A public GitHub repository with an MIT licence, a README, a short video and written feedback.
 
 **Left out until after the deadline**
@@ -121,7 +121,7 @@ We also compare its suggestions with a plain grid of fixed settings and report h
 
 ### Dashboard
 
-Three pages: an **engine view** (pick an engine, move a slider to a flight, see the predicted and the true flights left), a **model comparison**, and a **stress-test page** (a line showing error against fault size, and a grid showing which faults hurt most). It is hosted on Nebius; check whether a DevPod or a Serverless Endpoint is the simplest for a Streamlit app.
+Three pages: an **engine view** (pick an engine, move a slider to a flight, see the predicted and the true flights left), a **model comparison**, and a **stress-test page** (a line showing error against fault size, and a grid showing which faults hurt most). It is hosted on Streamlit Community Cloud and redeploys automatically on every push to GitHub.
 
 ## Technology choices and why
 
@@ -141,15 +141,14 @@ The rule behind every choice: use the simplest thing that answers the question, 
 | Plain CSV and JSON files | Enough for a static benchmark | A database | No users or live data to store |
 | Streamlit and Plotly | Python only and quick to build | Gradio, FastAPI with React | Only needed if several clients must use the model |
 
-### NVIDIA, Nebius and tools
+### NVIDIA and tools
 
 | Choice | Why we chose it | Alternatives | Why not those now |
 | --- | --- | --- | --- |
-| NVIDIA Nemotron-3.5-Lightning | The hackathon requires at least one NVIDIA open model. Nemotron-3.5-Lightning is available on the free hosted endpoint, and we only need short structured output. | Nemotron Super or Ultra | Cost more and add nothing for this job |
+| NVIDIA Nemotron-3.5-Lightning | The hackathon requires at least one NVIDIA open model. Nemotron-3.5-Lightning is available on NVIDIA's free hosted endpoint (build.nvidia.com), and we only need short structured output. | Nemotron Super or Ultra | Cost more and add nothing for this job |
 | Not using Nemotron to predict | It is a language model, not built for table data, and its mistakes would sound confident | Fine-tuning it on engine data | Heavy GPU work for a worse, less testable result |
 | Not using NIM, TensorRT-LLM, NeMo Curator, NeMo Evaluator or DGX Spark | They need extra infrastructure or hardware (the evaluator is set up on Kubernetes), and our own checks do the job | The same tools | Kept as future steps for private, self-hosted use |
-| Nebius | The rules need the project to call Token Factory or run on Nebius compute. Hosting the dashboard there meets this with one account | Streamlit Community Cloud plus Token Factory calls | Works only if the app makes a live call; hosting on Nebius is the safer fit |
-| No GPU for now | The data is small and runs on your Mac | Colab, Kaggle, Nebius GPU, AMD Developer Cloud | Needed only for the GRU in the paper phase |
+| No GPU for now | The data is small and runs on your Mac | Colab, Kaggle, AMD Developer Cloud | Needed only for the GRU in the paper phase |
 | GitHub with an MIT licence | The rules need a public repository with an open-source licence, and commits let you roll back | GitLab | Same idea, but GitHub is the one named first in the rules |
 | A coding helper such as OpenCode | Speeds up writing code | None needed | It does not count as using Nemotron, and we still review and test every core function ourselves |
 
@@ -190,14 +189,13 @@ The Nebius x NVIDIA Global AI Hackathon closes on 30 Oct 2026 at 10:00 am PT, wh
 ### This week
 
 - [ ] Register on Devpost and click Join Hackathon
-- [ ] Join the Nebius Builder Program and note the credit you actually receive
-- [ ] Open the Token Factory console; note the Nemotron models it lists and the exact model name and web address to call
+- [ ] Open the build.nvidia.com console; note the Nemotron models it lists and the exact model name and web address to call
 - [ ] Confirm the track (we expect Best Apps and Agents)
 - [ ] Join the AMD AI Developer Program to see whether the GPU credits arrive without entering a hackathon (for the paper phase)
 
 ### Rules the project must meet
 
-- [ ] It runs on Nebius compute or makes a live call to Token Factory (hosting the dashboard on Nebius covers this)
+- [ ] It uses NVIDIA technology through a live call to NVIDIA's hosted endpoint (build.nvidia.com)
 - [ ] It uses at least one NVIDIA open model in a way the project depends on
 - [ ] It is a genuine attempt at the track, because Stage One is pass or fail
 - [ ] AeroGuard existed before 26 Aug, so a written note explains what was significantly updated during the submission period
@@ -206,9 +204,9 @@ The Nebius x NVIDIA Global AI Hackathon closes on 30 Oct 2026 at 10:00 am PT, wh
 
 - [ ] Working demo link, free and open for testing until judging ends on 15 Dec
 - [ ] Public repository with an MIT or Apache 2.0 licence visible at the top
-- [ ] README with setup steps, how Nemotron is used, where Token Factory helped, and any other Nebius services
+- [ ] README with setup steps, how Nemotron is used, and the tech stack
 - [ ] Public YouTube video under 3 minutes showing the project running, with no copyrighted music
-- [ ] Project description, track choice and written feedback on Nebius and NVIDIA tools
+- [ ] Project description, track choice and written feedback on NVIDIA tools
 
 ### How judges score
 
@@ -226,7 +224,7 @@ The biggest risk is time. Everything below has a fallback that keeps the project
 | Reruns or judge visits use up the credits | The demo stops working | Saved replies, the small Nano model, a limit on live calls, and a weekly look at the credit balance |
 | Data leakage between flights of one engine | A fake, inflated score | Split by engine, add a test that no engine appears on both sides, and use past-only features |
 | The safe-side model asks for maintenance far too early | The safety looks too expensive | Measure and report the cost of safety, and choose the quantile on validation data only |
-| Trouble hosting on Nebius | The demo cannot be opened | Deploy a hello-world page in Week 1, and keep a recorded video as backup |
+| Trouble hosting the dashboard | The demo cannot be opened | Deploy a hello-world page in Week 1, and keep a recorded video as backup |
 | Simulated data mistaken for real engines | Unsafe or misleading claims | A clear disclaimer in the README, the app and the video |
 | The demo goes down before 15 Dec | It cannot be judged | Keep it running and check it weekly |
 
@@ -238,7 +236,7 @@ The biggest risk is time. Everything below has a fallback that keeps the project
 | --- | --- |
 | A custom loss tied to the NASA score (LightGBM or XGBoost) | Paper phase, after the quantile version is measured |
 | FD002 to FD004, with 6 operating conditions and 2 fault modes | After the FD001 pipeline is stable |
-| GRU or LSTM networks in PyTorch on a GPU | After the hackathon; GPU options are Nebius, free Colab or Kaggle, AMD credits, or IndiaAI subsidised GPUs |
+| GRU or LSTM networks in PyTorch on a GPU | After the hackathon; GPU options are free Colab or Kaggle, AMD credits, or IndiaAI subsidised GPUs |
 | The large N-CMAPSS full-flight dataset | When GPU time is available |
 | Drift Sentinel, an alarm for data that has changed | After the Robustness Lab shows which faults matter |
 | Self-hosted Nemotron (NIM, TensorRT-LLM) for private data | If data must not leave your own network |
@@ -248,9 +246,7 @@ The biggest risk is time. Everything below has a fallback that keeps the project
 
 ### Open items to verify
 
-- [ ] Your Nebius credit amount, and whether free GPU hours exist (the rules do not say)
-- [ ] Which Nemotron models your Token Factory account lists, with the exact model name and web address
-- [ ] Which Nebius hosting option (DevPod or Serverless Endpoint) is simplest for Streamlit
+- [ ] The Nemotron models available in your build.nvidia.com catalog, with the exact model name and web address
 - [ ] The final track
 - [ ] The FD001 engine counts (100 training and 100 test) against NASA's readme
 - [ ] Whether loss functions aware of the NASA score are already published
