@@ -1,52 +1,57 @@
-<!-- ============================================================
-     HEADER IMAGE
-     Save your banner as docs/images/header.png (recommended 1600x400)
-     ============================================================ -->
+<!-- Header banner: docs/header.png (recommended 1600x400) -->
 <p align="center">
   <img src="docs/header.png" alt="Jet Engine RUL Prognostics System" width="100%">
 </p>
 
-<h1 align="center">✈️ Jet Engine RUL Prognostics System</h1>
+<h1 align="center">Jet Engine RUL Prognostics System</h1>
 
 <p align="center">
   <b>Predict how many flights an engine has left, then stress-test that prediction when the sensors go bad.</b>
 </p>
 
 <p align="center">
-  <a href="https://YOUR-APP.streamlit.app"><img src="https://img.shields.io/badge/🚀_LIVE_DEMO-Open_Dashboard-FF4B4B?style=for-the-badge" alt="Live Demo"></a>
-  <a href="#-quickstart"><img src="https://img.shields.io/badge/⚡_QUICKSTART-Run_Locally-2ea44f?style=for-the-badge" alt="Quickstart"></a>
+  <a href="https://YOUR-APP.streamlit.app"><img src="https://img.shields.io/badge/LIVE_DEMO-Open_Dashboard-FF4B4B?style=for-the-badge" alt="Live Demo"></a>
+  <a href="#quickstart"><img src="https://img.shields.io/badge/QUICKSTART-Run_Locally-2ea44f?style=for-the-badge" alt="Quickstart"></a>
 </p>
-
 
 <p align="center">
-  <img src="https://cdn.simpleicons.org/python/3776AB" height="36" alt="Python" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/pandas/150458" height="36" alt="pandas" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/numpy/013243" height="36" alt="NumPy" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/scikitlearn/F7931E" height="36" alt="scikit-learn" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/nvidia/76B900" height="36" alt="NVIDIA" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/streamlit/FF4B4B" height="36" alt="Streamlit" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/plotly/3F4F75" height="36" alt="Plotly" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/pytest/0A9EDC" height="36" alt="pytest" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/yaml/CB171E" height="36" alt="YAML" />
-  &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/github/FFFFFF" height="36" alt="GitHub" />
+  <img src="https://img.shields.io/badge/python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/tests-94_passing-brightgreen?style=flat-square&logo=pytest&logoColor=white" alt="Tests">
+  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/data-NASA_C--MAPSS_FD001-0B3D91?style=flat-square" alt="NASA C-MAPSS">
+  <img src="https://img.shields.io/badge/deployed_on-Streamlit_Cloud-FF4B4B?style=flat-square&logo=streamlit&logoColor=white" alt="Streamlit Cloud">
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/pandas-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="pandas">
+  <img src="https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white" alt="NumPy">
+  <img src="https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white" alt="scikit-learn">
+  <img src="https://img.shields.io/badge/NVIDIA_Nemotron-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="NVIDIA Nemotron">
+  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit">
+  <img src="https://img.shields.io/badge/Plotly-3F4F75?style=for-the-badge&logo=plotly&logoColor=white" alt="Plotly">
+  <img src="https://img.shields.io/badge/pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white" alt="pytest">
+  <img src="https://img.shields.io/badge/YAML-CB171E?style=for-the-badge&logo=yaml&logoColor=white" alt="YAML">
+  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+</p>
+
+<p align="center">
+  <a href="#overview">Overview</a> |
+  <a href="#demo">Demo</a> |
+  <a href="#tech-stack">Tech Stack</a> |
+  <a href="#architecture">Architecture</a> |
+  <a href="#key-results">Results</a> |
+  <a href="#metrics">Metrics</a> |
+  <a href="#quickstart">Quickstart</a> |
+  <a href="#repository-layout">Layout</a>
+</p>
 
 > [!WARNING]
 > **Disclaimer.** This project uses NASA's C-MAPSS *simulation* data, not real airline or engine data. It is a research and portfolio project and **must not** be used for real maintenance or airworthiness decisions.
 
 ---
 
-## 🧭 Overview
+## Overview
 
 Maintenance too early wastes money. Maintenance too late risks failure. The dangerous error is predicting **too many flights remaining**.
 
@@ -56,58 +61,45 @@ This project predicts the **Remaining Useful Life (RUL)** of a simulated jet eng
 
 | Component | Description |
 |---|---|
-| 🔮 **Predictor** | Constant baseline, Random Forest, Gradient Boosting, a conservative **safe-side** quantile model (α = 0.30), and P10 / P90 interval models |
-| 🧪 **Robustness Lab** | 100 engines are damaged three ways (noise, drift, missing readings) at four magnitudes each, giving 12 grid scenarios × 5 seeds |
-| 🤖 **AI scenario generator** | NVIDIA Nemotron proposes extra single-sensor fault settings, strictly validated and cached |
-| 📊 **Dashboard** | 4-page Streamlit + Plotly app reading pre-computed artifacts only |
+| **Predictor** | Constant baseline, Random Forest, Gradient Boosting, a conservative **safe-side** quantile model (α = 0.30), and P10 / P90 interval models |
+| **Robustness Lab** | 100 engines are damaged three ways (noise, drift, missing readings) at four magnitudes each, giving 12 grid scenarios × 5 seeds |
+| **AI scenario generator** | NVIDIA Nemotron proposes extra single-sensor fault settings, strictly validated and cached |
+| **Dashboard** | 4-page Streamlit + Plotly app reading pre-computed artifacts only |
 
 ---
 
-## 🎬 Demo
-
-<p align="center">
-  <img src="docs/demo.gif" alt="Dashboard demo" width="90%">
-</p>
+## Demo
 
 <table>
   <tr>
     <td align="center" width="50%">
       <img src="docs/overview.png" alt="Overview page"><br>
-      <b>Overview</b><br><sub>Headline result and locked official test result</sub>
+      <b>Overview</b><br>
+      <sub>Headline result and locked official test result</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/engine_view.png" alt="Engine View page"><br>
-      <b>Engine View</b><br><sub>Predicted vs true RUL with P10–P90 band</sub>
+      <b>Engine View</b><br>
+      <sub>Predicted vs true RUL with P10-P90 band</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <img src="docs/model_comparison.png" alt="Model Comparison page"><br>
-      <b>Model Comparison</b><br><sub>MAE, bias, NASA score, cost of safety</sub>
+      <b>Model Comparison</b><br>
+      <sub>MAE, bias, NASA score, cost of safety</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/stress_lab.png" alt="Stress Lab page"><br>
-      <b>Stress Lab</b><br><sub>Degradation heatmap per fault kind and magnitude</sub>
+      <b>Stress Lab</b><br>
+      <sub>Degradation heatmap per fault kind and magnitude</sub>
     </td>
   </tr>
 </table>
 
 ---
 
-## 🛠️ Tech Stack
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/pandas-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="pandas">
-  <img src="https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white" alt="NumPy">
-  <img src="https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white" alt="scikit-learn">
-  <img src="https://img.shields.io/badge/NVIDIA_Nemotron-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="NVIDIA">
-  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit">
-  <img src="https://img.shields.io/badge/Plotly-3F4F75?style=for-the-badge&logo=plotly&logoColor=white" alt="Plotly">
-  <img src="https://img.shields.io/badge/pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white" alt="pytest">
-  <img src="https://img.shields.io/badge/YAML-CB171E?style=for-the-badge&logo=yaml&logoColor=white" alt="YAML">
-  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
-</p>
+## Tech Stack
 
 | Layer | Technology | Role |
 |---|---|---|
@@ -122,7 +114,7 @@ This project predicts the **Remaining Useful Life (RUL)** of a simulated jet eng
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -137,22 +129,22 @@ flowchart LR
     R -->|read-only| UI[Streamlit Dashboard]
 ```
 
-**Order of operations:** config → offline artifact generation → the dashboard only ever *reads* committed artifacts. No model trains at request time, and no AI call happens on page load.
+**Order of operations:** config, then offline artifact generation, then the dashboard only ever *reads* committed artifacts. No model trains at request time, and no AI call happens on page load.
 
-### 🟢 Where NVIDIA fits
+### Where NVIDIA fits
 
 Nemotron-3.5-Lightning (`nvidia/nemotron-3.5-lightning-30b-a3b`, keyed by `NVIDIA_API_KEY`) has **exactly one job**: propose additional single-sensor fault settings to stress.
 
-1. **Calls** the live endpoint once per run (≤ 5 calls, capped by `NEMOTRON_MAX_CALLS`)
-2. **Validates** every proposal against a strict schema: sensor whitelist, fault-kind whitelist, per-kind magnitude range, integer seed, dedupe
-3. **Unions** validated suggestions with the fixed 12-scenario grid, tagged by provenance (`grid` vs `nemotron`)
-4. **Caches** validated replies to `results/nemotron_scenarios.json`, so reruns are deterministic and free
+1. **Calls** the live endpoint once per run (at most 5 calls, capped by `NEMOTRON_MAX_CALLS`).
+2. **Validates** every proposal against a strict schema: sensor whitelist, fault-kind whitelist, per-kind magnitude range, integer seed, dedupe.
+3. **Unions** validated suggestions with the fixed 12-scenario grid, tagged by provenance (`grid` vs `nemotron`).
+4. **Caches** validated replies to `results/nemotron_scenarios.json`, so reruns are deterministic and free.
 
 > Nemotron never sees engine data, labels, or scores. It only suggests test scenarios. The live call was executed and verified, and 6 validated settings are cached and committed.
 
 ---
 
-## 📈 Key Results
+## Key Results
 
 All numbers are computed by `evaluate.py` from artifacts committed under `results/`. Nothing is hand-written. Validation uses a 20-engine seeded holdout from the 100 FD001 training engines, scored against **uncapped** true RUL.
 
@@ -165,7 +157,7 @@ All numbers are computed by `evaluate.py` from artifacts committed under `result
 | Gradient Boosting | **27.6** | −3.6 | 35% |
 | Safe-side (α = 0.30) | 30.7 | −23.3 | **10%** |
 
-> 🛡️ **Cost of safety: +4.9 flights.** The safe-side model cuts too-optimistic engines from **35% → 10%** at the price of about 5 flights of earlier maintenance.
+> **Cost of safety: +4.9 flights.** The safe-side model cuts too-optimistic engines from **35% to 10%** at the price of about 5 flights of earlier maintenance.
 
 ### Locked official test run
 
@@ -175,16 +167,16 @@ Gradient Boosting trained on the full 100-engine training set, scored once on th
 |---|:---:|:---:|
 | Gradient Boosting | 63,259.2 | 23.7 |
 
-### Stress test (clean + 12 grid scenarios × 5 seeds).
+### Stress test (clean + 12 grid scenarios × 5 seeds)
 
-- 📉 **Noise hurts most.** At k = 2σ, Gradient Boosting's engine-mean MAE rises by about **+25 flights** over the clean baseline.
-- 📈 **Drift can help GB.** Tree models absorb smooth systematic shifts, while the safe-side model pays more there.
-- 🩹 **Missing readings barely matter.** Forward-fill handles them.
-- 🛡️ **Safety persists.** The safe-side model stays visibly conservative (largest negative bias) under almost all faults, at a measured cost.
+- **Noise hurts most.** At k = 2σ, Gradient Boosting's engine-mean MAE rises by about **+25 flights** over the clean baseline.
+- **Drift can help GB.** Tree models absorb smooth systematic shifts, while the safe-side model pays more there.
+- **Missing readings barely matter.** Forward-fill handles them.
+- **Safety persists.** The safe-side model stays visibly conservative (largest negative bias) under almost all faults, at a measured cost.
 
 ---
 
-## 📐 Metrics
+## Metrics
 
 **Error convention:** `d = prediction − truth`. Positive `d` means *too many flights left predicted* (optimistic, dangerous).
 
@@ -194,17 +186,17 @@ Gradient Boosting trained on the full 100-engine training set, scored once on th
 | **NASA score** | Saxena & Goebel, PHM 2008, at each engine's last cycle: `d < 0 → exp(−d/13) − 1`, `d ≥ 0 → exp(d/10) − 1` (the steeper, dangerous branch) |
 | **Too-optimistic rate** | Fraction of rows/engines with `d > +10` flights (margin fixed before runs; 5/10/20 sweep in artifacts) |
 | **Cost of safety** | Safe-side MAE − Gradient-Boosting MAE on the same engines |
-| **Range calibration** | P10–P90 empirical coverage on validation; quantiles sorted so Q10 ≤ prediction ≤ Q90 |
+| **Range calibration** | P10-P90 empirical coverage on validation; quantiles sorted so Q10 ≤ prediction ≤ Q90 |
 | **Spread** | Mean ± standard deviation across 5 seeds |
 
 ---
 
-## 🖥️ Dashboard Pages
+## Dashboard Pages
 
 | Page | What it shows |
 |---|---|
 | **Overview** | Landing page, headline result, locked official test result, links, disclaimer |
-| **Engine View** | Pick a validation engine: predicted vs true RUL by flight, GB headline, safe-side comparison, P10–P90 band, per-engine metrics |
+| **Engine View** | Pick a validation engine: predicted vs true RUL by flight, GB headline, safe-side comparison, P10-P90 band, per-engine metrics |
 | **Model Comparison** | All models side by side: MAE, bias, NASA scores, split tables, cost of safety |
 | **Stress Lab** | Degradation per fault kind and magnitude, diverging heatmap (red = worse), cost of safety per fault, grid + Nemotron provenance |
 
@@ -212,7 +204,7 @@ Every page displays: *"NASA C-MAPSS simulation data only. Not for real maintenan
 
 ---
 
-## ⚡ Quickstart
+## Quickstart
 
 ### 1. Environment
 
@@ -229,7 +221,7 @@ pip install -r requirements.txt
 
 Download **NASA C-MAPSS FD001** and place the raw files under `data/raw/` (git-ignored):
 
-```
+```text
 train_FD001.txt   test_FD001.txt   RUL_FD001.txt   readme.txt
 ```
 
@@ -245,14 +237,14 @@ cp .env.example .env    # then add your build.nvidia.com key
 
 ```bash
 python train.py          # train all models, evaluate on validation
-python stress_test.py    # all models × 12 grid scenarios × 5 seeds
+python stress_test.py    # all models x 12 grid scenarios x 5 seeds
 python test_run.py       # single locked run on the official test set
 ```
 
 ### 5. Launch the dashboard
 
 ```bash
-streamlit run app.py     # → http://localhost:8501
+streamlit run app.py     # opens http://localhost:8501
 ```
 
 ### 6. Run the tests
@@ -265,7 +257,7 @@ Tests that need the real FD001 files skip automatically when data is absent, so 
 
 ---
 
-## 🗂️ Repository Layout
+## Repository Layout
 
 ```text
 .
@@ -278,20 +270,22 @@ Tests that need the real FD001 files skip automatically when data is absent, so 
 ├── features.py            # Past-only mean/trend features (window resets per engine)
 ├── models.py              # Constant / RF / GB / quantile models
 ├── faults.py              # Noise, drift, missing-readings injection
-├── scenarios.py           # NVIDIA Nemotron client: prompt → validate → cache
+├── scenarios.py           # NVIDIA Nemotron client: prompt, validate, cache
 ├── train.py               # Fit models, evaluate on validation
-├── stress_test.py         # Models × scenarios × seeds
+├── stress_test.py         # Models x scenarios x seeds
 ├── test_run.py            # Locked official test run (last-cycle scoring)
 ├── evaluate.py            # Metrics incl. NASA score at last cycle
 ├── results/               # Committed artifacts
 ├── tests/                 # 94 tests, one suite per module
-├── docs/                  # Design + UI documentation
+├── docs/                  # Design + UI documentation, screenshots
 ├── MASTER_SPEC.md         # Source of truth: design, decisions, acceptance
 └── requirements.txt
 ```
 
 <details>
-<summary><b>📦 Committed artifacts (<code>results/</code>)</b></summary>
+<summary><b>Committed artifacts (<code>results/</code>)</b></summary>
+
+<br>
 
 | File | Contents |
 |---|---|
@@ -302,11 +296,12 @@ Tests that need the real FD001 files skip automatically when data is absent, so 
 | `nemotron_scenarios.json` | Live-validated Nemotron fault proposals (6 settings) |
 
 Raw training data (`data/raw/`) and your `.env` are git-ignored.
+
 </details>
 
 ---
 
-## 🔒 Reproducibility & Safety
+## Reproducibility and Safety
 
 - **Seeds** all live in `config.yaml`, and every run logs the resolved config (`results/phase2_resolved_config.json`).
 - **Leak-free split.** Train/validation split is by whole engines, never by row. A test asserts the engine-ID sets are disjoint.
@@ -317,43 +312,42 @@ Raw training data (`data/raw/`) and your `.env` are git-ignored.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 | Phase | Description | Status |
 |:---:|---|:---:|
-| 0 | Setup & spec | ✅ |
-| 1 | Data & features | ✅ |
-| 2 | Models & baselines | ✅ |
-| 3 | Robustness Lab | ✅ |
-| 4 | Stress test & evaluation | ✅ |
-| 5 | Dashboard & demo | ✅ |
-| 6 | Polish, tests, submission | ✅ |
+| 0 | Setup & spec | Done |
+| 1 | Data & features | Done |
+| 2 | Models & baselines | Done |
+| 3 | Robustness Lab | Done |
+| 4 | Stress test & evaluation | Done |
+| 5 | Dashboard & demo | Done |
+| 6 | Polish, tests, submission | Done |
 
 ---
 
-## 📚 References
+## References
 
-- A. Saxena, K. Goebel, D. Simon, and N. Eklund, *Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation*, **PHM 2008** — the C-MAPSS paper and origin of the asymmetric scoring function. ([DOI: 10.1109/PHM.2008.4711414](https://doi.org/10.1109/PHM.2008.4711414))
-- F. O. Heimes, *Recurrent Neural Networks for Remaining Useful Life Estimation*, **PHM 2008** — the classic RUL-cap (`censored` target) convention. ([DOI: 10.1109/PHM.2008.4711421](https://doi.org/10.1109/PHM.2008.4711421))
-- E. Ramasso and A. Saxena, *Performance Benchmarking and Regularization of prognostics methods*, **IJPHM 2014** — the standard review/benchmark of C-MAPSS methods, incl. "RUL-capping". ([DOI: 10.5014/ijphm.2014.0060](https://doi.org/10.5014/ijphm.2014.0060))
-- A. Saxena and K. Goebel, *C-MAPSS Data Set*, NASA Prognostics Center of Excellence (PCoE) — the official dataset source. ([NASA PCoE Data Repository](https://www.nasa.gov/intelligent-systems-division))
-- D. A. Beard and H. W. T. van den Broek — *Remaining Useful Life Estimation in prognostics* survey literature, see the Ramasso & Saxena review for a full bibliography.
-- **NASA C-MAPSS Reference**: Turbofan Engine Degradation Simulation Data Set, NASA Ames Prognostics Data Repository.
-- **NVIDIA Nemotron-3.5-Lightning** model card and hosted endpoint documentation at [build.nvidia.com](https://build.nvidia.com).
-- **Streamlit** documentation for `st.navigation` multipage apps and Community Cloud deployment ([docs.streamlit.io](https://docs.streamlit.io)).
-- **scikit-learn** quantile regression via `GradientBoostingRegressor(loss="quantile")` ([scikit-learn docs](https://scikit-learn.org/stable/modules/ensemble.html)).
-- **Plotly** Python graphing library documentation ([plotly.com/python](https://plotly.com/python/)).
+- A. Saxena, K. Goebel, D. Simon, and N. Eklund, *Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation*, PHM 2008. The C-MAPSS paper and origin of the asymmetric scoring function. ([DOI: 10.1109/PHM.2008.4711414](https://doi.org/10.1109/PHM.2008.4711414))
+- F. O. Heimes, *Recurrent Neural Networks for Remaining Useful Life Estimation*, PHM 2008. Early work using a piecewise-capped RUL target.
+- NASA Prognostics Center of Excellence, *Turbofan Engine Degradation Simulation Data Set (C-MAPSS)*. ([NASA PCoE Data Repository](https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/))
+- NVIDIA Nemotron-3.5-Lightning model card and hosted endpoint at [build.nvidia.com](https://build.nvidia.com).
+- [Streamlit documentation](https://docs.streamlit.io): `st.navigation` multipage apps and Community Cloud deployment.
+- [scikit-learn documentation](https://scikit-learn.org/stable/modules/ensemble.html): quantile loss in `GradientBoostingRegressor`.
+- [Plotly Python documentation](https://plotly.com/python/).
 
-## 📄 License
+---
+
+## License
 
 Released under the **MIT License**. See [LICENSE](LICENSE).
 
-## 👤 Author
+## Author
 
 **Ameer Muhammed** · [@ameer5511](https://github.com/ameer5511)
 
 <p align="center">
-  <sub>If this project helped you, consider giving it a ⭐</sub>
+  <sub>If this project helped you, consider giving it a star.</sub>
 </p>
 
 <p align="center">
