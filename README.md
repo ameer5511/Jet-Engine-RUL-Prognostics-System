@@ -3,7 +3,7 @@
      Save your banner as docs/images/header.png (recommended 1600x400)
      ============================================================ -->
 <p align="center">
-  <img src="docs/images/header.png" alt="Jet Engine RUL Prognostics System" width="100%">
+  <img src="docs/header.png" alt="Jet Engine RUL Prognostics System" width="100%">
 </p>
 
 <h1 align="center">✈️ Jet Engine RUL Prognostics System</h1>
@@ -59,32 +59,26 @@ This project predicts the **Remaining Useful Life (RUL)** of a simulated jet eng
 
 ## 🎬 Demo
 
-<p align="center">
-  <a href="https://YOUR-APP.streamlit.app">
-    <img src="docs/images/demo.gif" alt="Dashboard demo" width="90%">
-  </a>
-  <br>
-  <sub>👆 Click to open the live dashboard</sub>
-</p>
+
 
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/overview.png" alt="Overview page"><br>
+      <img src="docs/overview.png" alt="Overview page"><br>
       <b>Overview</b><br><sub>Headline result and locked official test result</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/engine_view.png" alt="Engine View page"><br>
+      <img src="docs/engine_view.png" alt="Engine View page"><br>
       <b>Engine View</b><br><sub>Predicted vs true RUL with P10–P90 band</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/model_comparison.png" alt="Model Comparison page"><br>
+      <img src="docs/model_comparison.png" alt="Model Comparison page"><br>
       <b>Model Comparison</b><br><sub>MAE, bias, NASA score, cost of safety</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/stress_lab.png" alt="Stress Lab page"><br>
+      <img src="docs/stress_lab.png" alt="Stress Lab page"><br>
       <b>Stress Lab</b><br><sub>Degradation heatmap per fault kind and magnitude</sub>
     </td>
   </tr>
