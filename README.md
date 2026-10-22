@@ -173,7 +173,7 @@ Gradient Boosting trained on the full 100-engine training set, scored once on th
 |---|:---:|:---:|
 | Gradient Boosting | 63,259.2 | 23.7 |
 
-### Stress test (clean + 12 grid scenarios × 5 seeds)
+### Stress test (clean + 12 grid scenarios × 5 seeds).
 
 - 📉 **Noise hurts most.** At k = 2σ, Gradient Boosting's engine-mean MAE rises by about **+25 flights** over the clean baseline.
 - 📈 **Drift can help GB.** Tree models absorb smooth systematic shifts, while the safe-side model pays more there.
